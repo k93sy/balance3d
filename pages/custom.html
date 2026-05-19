@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balance 3D — طباعة مخصصة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/tokens.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/nav.css"/>
+  <link rel="stylesheet" href="../css/footer.css"/>
+  <link rel="stylesheet" href="../css/custom.css"/>
+</head>
+<body class="custom-page">
+
+<!-- Navigation mount -->
+<div id="navMount"></div>
+
+<!-- ==============================
+     HERO
+============================== -->
+<section class="custom-hero">
+  <div class="custom-hero__bg"></div>
+  <div class="custom-hero__grid"></div>
+  <div class="container">
+    <div class="custom-hero__content reveal">
+      <div class="custom-hero__badge" data-i18n="custom.hero.badge">خدمة مخصصة</div>
+      <h1 data-i18n="custom.hero.title">اطبع <span>تصميمك</span> بدقة احترافية</h1>
+      <p data-i18n="custom.hero.desc">أرسل ملف النموذج ثلاثي الأبعاد، اختر المادة والألوان، واحصل على عرض سعر فوري. نقدم خدمة طباعة ثلاثية الأبعاد عالية الجودة لأفراد وشركات.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================
+     PROCESS STEPS
+============================== -->
+<section class="process-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label" data-i18n="custom.process.label">كيف يعمل؟</span>
+      <h2 data-i18n="custom.process.title">أربع خطوات بسيطة</h2>
+      <p data-i18n="custom.process.desc">من ملف التصميم إلى منتج جاهز في يدك — العملية بسيطة وسريعة.</p>
+    </div>
+
+    <div class="process-grid">
+      <div class="process-step reveal reveal-delay-1">
+        <div class="process-step__num">01</div>
+        <h4 data-i18n="custom.step1.title">ارفع الملف</h4>
+        <p data-i18n="custom.step1.desc">ارفع ملف التصميم بصيغ STL أو OBJ أو STEP أو غيرها.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-2">
+        <div class="process-step__num">02</div>
+        <h4 data-i18n="custom.step2.title">اختر المواصفات</h4>
+        <p data-i18n="custom.step2.desc">حدد المادة، اللون، الكمية، وجودة الطباعة المطلوبة.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-3">
+        <div class="process-step__num">03</div>
+        <h4 data-i18n="custom.step3.title">راجع العرض</h4>
+        <p data-i18n="custom.step3.desc">نحسب السعر التقديري فوراً، وفريقنا يتواصل معك لتأكيد الطلب.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-4">
+        <div class="process-step__num">04</div>
+        <h4 data-i18n="custom.step4.title">استلم منتجك</h4>
+        <p data-i18n="custom.step4.desc">نطبع قطعتك بدقة عالية ونشحنها إليك في أسرع وقت.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================
+     UPLOAD + QUOTE FORM
+============================== -->
+<section class="upload-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label" data-i18n="custom.quote.label">احصل على عرض</span>
+      <h2 data-i18n="custom.quote.title">ارفع ملفك وأرسل طلبك</h2>
+    </div>
+
+    <div class="upload-layout" style="margin-top: var(--space-12);">
+
+      <!-- Dropzone -->
+      <div>
+        <div class="dropzone" id="dropzone">
+          <input type="file" class="dropzone__input" id="fileInput" accept=".stl,.obj,.step,.stp,.3mf,.iges,.igs"/>
+          <div class="dropzone__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <h4 data-i18n="custom.drop.title">اسحب ملفك هنا</h4>
+          <p data-i18n="custom.drop.desc">أو انقر لاختيار الملف من جهازك</p>
+          <div class="dropzone__formats">
+            <span>.STL</span><span>.OBJ</span><span>.STEP</span><span>.3MF</span><span>.IGES</span>
+          </div>
+          <div class="dropzone__selected" id="fileSelected">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            <span id="selectedFileName">file.stl</span>
+          </div>
+        </div>
+
+        <!-- Materials showcase mini -->
+        <div style="margin-top: var(--space-8);">
+          <p style="font-size:var(--text-sm);font-weight:var(--fw-semibold);color:var(--clr-text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:var(--space-4);" data-i18n="custom.materials.title">مواد الطباعة المتاحة</p>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);">
+            <span class="badge badge--outline">PLA</span>
+            <span class="badge badge--outline">ABS</span>
+            <span class="badge badge--outline">PETG</span>
+            <span class="badge badge--outline">Resin</span>
+            <span class="badge badge--outline">Nylon</span>
+            <span class="badge badge--outline">TPU</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote form -->
+      <div class="quote-form-card">
+        <h3 data-i18n="custom.form.title">مواصفات الطباعة</h3>
+
+        <div class="form-group">
+          <label class="form-label required" data-i18n="custom.form.material">المادة</label>
+          <div class="material-grid">
+            <label class="material-option selected" data-material="pla">
+              <input type="radio" name="material" value="pla" checked/>
+              <span class="material-option__name">PLA</span>
+              <span class="material-option__desc" data-i18n="mat.pla.desc">متعدد الاستخدام، اقتصادي</span>
+            </label>
+            <label class="material-option" data-material="abs">
+              <input type="radio" name="material" value="abs"/>
+              <span class="material-option__name">ABS</span>
+              <span class="material-option__desc" data-i18n="mat.abs.desc">متين وقابل للتشغيل</span>
+            </label>
+            <label class="material-option" data-material="petg">
+              <input type="radio" name="material" value="petg"/>
+              <span class="material-option__name">PETG</span>
+              <span class="material-option__desc" data-i18n="mat.petg.desc">مقاومة عالية للحرارة</span>
+            </label>
+            <label class="material-option" data-material="resin">
+              <input type="radio" name="material" value="resin"/>
+              <span class="material-option__name">Resin</span>
+              <span class="material-option__desc" data-i18n="mat.resin.desc">تفاصيل دقيقة جداً</span>
+            </label>
+            <label class="material-option" data-material="nylon">
+              <input type="radio" name="material" value="nylon"/>
+              <span class="material-option__name">Nylon</span>
+              <span class="material-option__desc" data-i18n="mat.nylon.desc">مرونة ومتانة عالية</span>
+            </label>
+            <label class="material-option" data-material="tpu">
+              <input type="radio" name="material" value="tpu"/>
+              <span class="material-option__name">TPU</span>
+              <span class="material-option__desc" data-i18n="mat.tpu.desc">مطاطي ومرن</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="quoteColor" data-i18n="custom.form.color">اللون</label>
+            <select id="quoteColor" class="form-input form-select">
+              <option value="white" data-i18n="color.white">أبيض</option>
+              <option value="black" data-i18n="color.black">أسود</option>
+              <option value="gray" data-i18n="color.gray">رمادي</option>
+              <option value="red" data-i18n="color.red">أحمر</option>
+              <option value="blue" data-i18n="color.blue">أزرق</option>
+              <option value="custom" data-i18n="color.custom">لون مخصص</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="quoteQty" data-i18n="custom.form.qty">الكمية</label>
+            <input type="number" id="quoteQty" class="form-input" value="1" min="1" max="500"/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="quoteQuality" data-i18n="custom.form.quality">جودة الطباعة</label>
+          <select id="quoteQuality" class="form-input form-select">
+            <option value="draft" data-i18n="quality.draft">مسودة — 0.3mm</option>
+            <option value="standard" selected data-i18n="quality.standard">قياسي — 0.2mm</option>
+            <option value="fine" data-i18n="quality.fine">دقيق — 0.1mm</option>
+            <option value="ultra" data-i18n="quality.ultra">فائق الدقة — 0.05mm</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="quoteNotes" data-i18n="custom.form.notes">ملاحظات إضافية</label>
+          <textarea id="quoteNotes" class="form-input form-textarea" rows="3" placeholder="أي متطلبات خاصة؟"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required" for="quoteName" data-i18n="custom.form.name">الاسم</label>
+          <input type="text" id="quoteName" class="form-input" autocomplete="name"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required" for="quoteEmail" data-i18n="custom.form.email">البريد الإلكتروني</label>
+          <input type="email" id="quoteEmail" class="form-input" autocomplete="email"/>
+        </div>
+
+        <!-- Price estimate -->
+        <div class="price-estimate">
+          <div>
+            <div class="price-estimate__label" data-i18n="custom.price.label">السعر التقديري</div>
+            <div class="price-estimate__note" data-i18n="custom.price.note">* يتغير حسب المادة والكمية</div>
+          </div>
+          <div class="price-estimate__value" id="priceEstimate">ر.س 35</div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg" style="width:100%" id="submitQuoteBtn" onclick="handleQuoteSubmit()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          <span data-i18n="custom.form.submit">إرسال طلب العرض</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==============================
+     FAQ
+============================== -->
+<section class="faq-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label" data-i18n="faq.label">الأسئلة الشائعة</span>
+      <h2 data-i18n="faq.title">لديك أسئلة؟</h2>
+    </div>
+
+    <div class="faq-list" id="faqList">
+      <div class="faq-item">
+        <button class="faq-item__question">
+          <span data-i18n="faq.q1">ما هي صيغ الملفات المقبولة؟</span>
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-item__answer">
+          <p data-i18n="faq.a1">نقبل الصيغ الشائعة مثل STL, OBJ, STEP/STP, 3MF, IGES/IGS. إذا كان لديك صيغة مختلفة، تواصل معنا وسنساعدك.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__question">
+          <span data-i18n="faq.q2">كم يستغرق تنفيذ الطلب؟</span>
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-item__answer">
+          <p data-i18n="faq.a2">يعتمد الوقت على حجم وتعقيد النموذج. عادةً 2–5 أيام عمل، والطلبات المستعجلة متاحة بسعر إضافي.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__question">
+          <span data-i18n="faq.q3">هل يوجد حد أدنى للطلب؟</span>
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-item__answer">
+          <p data-i18n="faq.a3">لا يوجد حد أدنى، يمكنك طلب قطعة واحدة. وكلما زادت الكمية، انخفض سعر الوحدة.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-item__question">
+          <span data-i18n="faq.q4">هل تقدمون خدمة التشطيب والطلاء؟</span>
+          <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-item__answer">
+          <p data-i18n="faq.a4">نعم، نقدم خدمات التشطيب مثل التصنيف (sanding)، التلميع، والطلاء. أضف ملاحظة في الطلب أو تواصل معنا.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer mount -->
+<div id="footerMount"></div>
+
+<!-- Toast container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="../js/core/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/core/db.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/payment.js"></script>
+<script src="../js/core/data.js"></script>
+<script>App._layoutBase = "";</script>
+<script src="../js/components/layout.js"></script>
+<script src="../js/pages/custom.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    CustomPage.init();
+    Reveal.init();
+  });
+
+  function handleQuoteSubmit() {
+    const name = document.getElementById('quoteName');
+    const email = document.getElementById('quoteEmail');
+    if (!name.value.trim() || !email.value.trim()) {
+      App.toast(App.t('form.fillrequired') || 'يرجى ملء الحقول المطلوبة', 'error');
+      return;
+    }
+    const btn = document.getElementById('submitQuoteBtn');
+    btn.classList.add('btn--loading');
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.classList.remove('btn--loading');
+      btn.disabled = false;
+      App.toast(App.t('custom.success') || 'تم إرسال طلبك! سنتواصل معك قريباً.', 'success');
+      document.getElementById('quoteName').value = '';
+      document.getElementById('quoteEmail').value = '';
+      document.getElementById('quoteNotes').value = '';
+    }, 1800);
+  }
+</script>
+</body>
+</html>

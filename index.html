@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balance 3D — الطباعة ثلاثية الأبعاد</title>
+  <meta name="description" content="Balance 3D - Saudi Arabia's premier 3D printing store. Custom prints, ready-made products, fast delivery."/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/tokens.css"/>
+  <link rel="stylesheet" href="css/base.css"/>
+  <link rel="stylesheet" href="css/components.css"/>
+  <link rel="stylesheet" href="css/nav.css"/>
+  <link rel="stylesheet" href="css/footer.css"/>
+  <link rel="stylesheet" href="css/home.css"/>
+
+  <style>
+    /* Hero canvas 3D scene */
+    #heroCanvas { display: block; width: 100%; height: 100%; }
+    .hero__canvas-wrap { min-height: 340px; }
+
+    /* Page-specific tweaks */
+    .page-wrapper { padding-top: 0; }
+  </style>
+</head>
+<body>
+
+<!-- NAV MOUNT -->
+<div id="navMount"></div>
+
+<!-- PAGE WRAPPER -->
+<main class="page-wrapper page-enter">
+
+  <!-- =================== HERO =================== -->
+  <section class="hero">
+    <div class="hero__bg">
+      <div class="hero__blob hero__blob--1"></div>
+      <div class="hero__blob hero__blob--2"></div>
+      <div class="hero__blob hero__blob--3"></div>
+      <div class="hero__grid-overlay"></div>
+    </div>
+
+    <div class="hero__inner">
+      <!-- Content -->
+      <div class="hero__content">
+        <div class="hero__badge">
+          <span class="hero__badge-dot"></span>
+          <span data-i18n="hero.badge">Saudi Arabia's #1 3D Printing Store</span>
+        </div>
+
+        <h1 class="hero__title" id="heroTitle">
+          <!-- Rendered by JS -->
+        </h1>
+
+        <p class="hero__desc" data-i18n="hero.desc">
+          From precision prototypes to stunning custom models — we deliver professional 3D printing with unmatched quality and speed.
+        </p>
+
+        <div class="hero__actions">
+          <a href="pages/products.html" class="btn btn-primary btn-lg" data-i18n="hero.cta.primary">Shop Now</a>
+          <a href="pages/custom.html" class="btn btn-outline btn-lg" data-i18n="hero.cta.secondary">Custom Order</a>
+        </div>
+
+        <div class="hero__stats">
+          <div class="hero__stat">
+            <span class="hero__stat-value" data-i18n="hero.stat.products">500+</span>
+            <span class="hero__stat-label" data-i18n="hero.stat.products.label">Products</span>
+          </div>
+          <div style="width:1px;height:36px;background:var(--clr-border)"></div>
+          <div class="hero__stat">
+            <span class="hero__stat-value" data-i18n="hero.stat.orders">12K+</span>
+            <span class="hero__stat-label" data-i18n="hero.stat.orders.label">Orders Delivered</span>
+          </div>
+          <div style="width:1px;height:36px;background:var(--clr-border)"></div>
+          <div class="hero__stat">
+            <span class="hero__stat-value" data-i18n="hero.stat.rating">4.9★</span>
+            <span class="hero__stat-label" data-i18n="hero.stat.rating.label">Customer Rating</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual -->
+      <div class="hero__visual">
+        <div class="hero__canvas-wrap">
+          <canvas id="heroCanvas"></canvas>
+        </div>
+
+        <!-- Float cards -->
+        <div class="hero__float-card hero__float-card--1">
+          <div class="hero__float-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polygon points="12 2 2 7 12 12 22 7"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="hero__float-label" data-i18n="hero.float.material">Material</div>
+            <div class="hero__float-value" data-i18n="hero.float.material.val">PLA Pro • PETG • Resin</div>
+          </div>
+        </div>
+
+        <div class="hero__float-card hero__float-card--2">
+          <div class="hero__float-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <div class="hero__float-label" data-i18n="hero.float.lead">Lead Time</div>
+            <div class="hero__float-value" data-i18n="hero.float.lead.val">24 – 48 hrs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== MARQUEE =================== -->
+  <section class="marquee-section">
+    <p class="marquee-label" id="marqueeLabel">Trusted by professionals across Saudi Arabia</p>
+    <div style="overflow:hidden">
+      <div class="marquee-track" id="marqueeTrack">
+        <span class="marquee-item">FDM Printing</span>
+        <span class="marquee-item">Resin Printing</span>
+        <span class="marquee-item">3D Design</span>
+        <span class="marquee-item">Prototyping</span>
+        <span class="marquee-item">Custom Models</span>
+        <span class="marquee-item">Fast Delivery</span>
+        <span class="marquee-item">FDM Printing</span>
+        <span class="marquee-item">Resin Printing</span>
+        <span class="marquee-item">3D Design</span>
+        <span class="marquee-item">Prototyping</span>
+        <span class="marquee-item">Custom Models</span>
+        <span class="marquee-item">Fast Delivery</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== FEATURES =================== -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label" data-i18n="section.features">Why Balance 3D</div>
+        <h2 class="section-title" data-i18n="section.features.title">Precision. Speed. Quality.</h2>
+        <p class="section-desc" data-i18n="section.features.desc">We combine cutting-edge 3D printing technology with expert craftsmanship to bring your ideas to life.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon feature-icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title" data-i18n="feat.speed.title">Fast Turnaround</h3>
+          <p class="feature-desc" data-i18n="feat.speed.desc">Most orders ready within 24–48 hours. Express options available.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon feature-icon--warm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <h3 class="feature-title" data-i18n="feat.quality.title">Premium Quality</h3>
+          <p class="feature-desc" data-i18n="feat.quality.desc">Layer precision as fine as 0.05mm. Professional-grade materials.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon feature-icon--green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07M8.46 8.46a5 5 0 0 0 0 7.07"/>
+            </svg>
+          </div>
+          <h3 class="feature-title" data-i18n="feat.custom.title">Fully Custom</h3>
+          <p class="feature-desc" data-i18n="feat.custom.desc">Any shape, any size, any material. Upload your file or let us design it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== PRODUCTS =================== -->
+  <section class="products-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label" data-i18n="section.products">Featured Products</div>
+        <h2 class="section-title" data-i18n="section.products.title">Our Best Sellers</h2>
+        <p class="section-desc" data-i18n="section.products.desc">Explore our most popular 3D printed products — ready to ship.</p>
+      </div>
+
+      <div class="products-grid" id="homeProductsGrid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div style="text-align:center;margin-top:var(--space-6)" class="reveal">
+        <a href="pages/products.html" class="btn btn-outline btn-lg" data-i18n="product.viewall">View All Products</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== CUSTOM CTA =================== -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-inner reveal">
+        <div>
+          <div class="cta-label" data-i18n="section.cta">Custom 3D Printing</div>
+          <h2 class="cta-title" data-i18n="section.cta.title">Have a Unique Idea?</h2>
+          <p class="cta-desc" data-i18n="section.cta.desc">Upload your design file or describe your project. Our experts will handle the rest — from material selection to final delivery.</p>
+          <a href="pages/custom.html" class="btn btn-accent btn-lg" data-i18n="section.cta.btn">Start Custom Order</a>
+        </div>
+
+        <div class="cta-visual">
+          <div class="cta-checklist" id="ctaChecklist">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== TESTIMONIALS =================== -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label" data-i18n="section.testimonials">Customer Reviews</div>
+        <h2 class="section-title" data-i18n="section.testimonials.title">Loved by Makers</h2>
+      </div>
+      <div class="testimonials-grid" id="testimonialsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER MOUNT -->
+<div id="footerMount"></div>
+
+<!-- SCRIPTS -->
+<script src="js/core/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/core/db.js"></script>
+<script src="js/core/auth.js"></script>
+<script src="js/core/payment.js"></script>
+<script src="js/core/data.js"></script>
+<script>App._layoutBase = 'pages/';</script>
+<script src="js/components/layout.js"></script>
+<script src="js/pages/home.js"></script>
+
+</body>
+</html>

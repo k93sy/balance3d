@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balance 3D — إتمام الشراء</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/tokens.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/checkout.css"/>
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="checkout-topbar">
+  <div class="checkout-topbar__inner">
+    <a href="../index.html" class="checkout-topbar__logo">
+      <div class="checkout-topbar__logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="12 2 2 7 12 12 22 7"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="checkout-topbar__logo-name">Balance 3D</span>
+    </a>
+    <div class="checkout-topbar__secure">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span id="secureLabel"></span>
+    </div>
+  </div>
+</header>
+
+<!-- Steps -->
+<nav class="checkout-steps" id="checkoutSteps" aria-label="Checkout steps"></nav>
+
+<!-- Confirmation view (shown after payment) -->
+<div id="confirmView" style="display:none">
+  <div class="checkout-confirm" id="confirmBox"></div>
+</div>
+
+<!-- Main checkout body -->
+<div class="checkout-body" id="checkoutBody">
+
+  <!-- Left: form sections -->
+  <div id="formCol">
+
+    <!-- Step 1: Contact -->
+    <div class="checkout-section active" id="sectionContact">
+      <div class="checkout-section__header">
+        <div class="checkout-section__step-num">1</div>
+        <h2 class="checkout-section__title" id="titleContact"></h2>
+      </div>
+      <div class="checkout-section__body">
+        <div class="co-form" id="formContact">
+          <div class="co-row">
+            <div class="co-group">
+              <label class="co-label" for="firstName" id="lblFirstName"></label>
+              <input type="text" id="firstName" class="co-input" autocomplete="given-name"/>
+              <span class="co-error" id="firstNameErr" style="display:none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+                <span id="firstNameErrMsg"></span>
+              </span>
+            </div>
+            <div class="co-group">
+              <label class="co-label" for="lastName" id="lblLastName"></label>
+              <input type="text" id="lastName" class="co-input" autocomplete="family-name"/>
+              <span class="co-error" id="lastNameErr" style="display:none">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+                <span id="lastNameErrMsg"></span>
+              </span>
+            </div>
+          </div>
+          <div class="co-group">
+            <label class="co-label" for="email" id="lblEmail"></label>
+            <input type="email" id="email" class="co-input" autocomplete="email" inputmode="email"/>
+            <span class="co-error" id="emailErr" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+              <span id="emailErrMsg"></span>
+            </span>
+          </div>
+          <div class="co-group">
+            <label class="co-label" for="phone" id="lblPhone"></label>
+            <input type="tel" id="phone" class="co-input" autocomplete="tel" inputmode="tel" placeholder="+966 5x xxx xxxx" dir="ltr"/>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-section__footer">
+        <div class="co-actions">
+          <button type="button" class="co-btn-continue" id="btnContactNext">
+            <span id="lblContactNext"></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Shipping -->
+    <div class="checkout-section" id="sectionShipping">
+      <div class="checkout-section__header">
+        <div class="checkout-section__step-num">2</div>
+        <h2 class="checkout-section__title" id="titleShipping"></h2>
+      </div>
+      <div class="checkout-section__body">
+        <div class="co-form" id="formShipping">
+          <div class="co-group">
+            <label class="co-label" for="city" id="lblCity"></label>
+            <select id="city" class="co-select"></select>
+          </div>
+          <div class="co-group">
+            <label class="co-label" for="district" id="lblDistrict"></label>
+            <input type="text" id="district" class="co-input"/>
+            <span class="co-error" id="districtErr" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+              <span id="districtErrMsg"></span>
+            </span>
+          </div>
+          <div class="co-group">
+            <label class="co-label" for="address" id="lblAddress"></label>
+            <input type="text" id="address" class="co-input"/>
+            <span class="co-error" id="addressErr" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+              <span id="addressErrMsg"></span>
+            </span>
+          </div>
+          <div class="co-group">
+            <label class="co-label" for="notes" id="lblNotes"></label>
+            <input type="text" id="notes" class="co-input"/>
+          </div>
+        </div>
+      </div>
+      <div class="checkout-section__footer">
+        <div class="co-actions">
+          <button type="button" class="co-btn-back" id="btnShipBack">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            </svg>
+            <span id="lblBack"></span>
+          </button>
+          <button type="button" class="co-btn-continue" id="btnShipNext">
+            <span id="lblShipNext"></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Payment -->
+    <div class="checkout-section" id="sectionPayment">
+      <div class="checkout-section__header">
+        <div class="checkout-section__step-num">3</div>
+        <h2 class="checkout-section__title" id="titlePayment"></h2>
+      </div>
+      <div class="checkout-section__body">
+        <!-- Payment form injected here by PaymentService.renderMoyasarForm() -->
+        <div id="moyasarContainer"></div>
+      </div>
+      <div class="checkout-section__footer" id="payFooter" style="padding-top:0">
+        <button type="button" class="co-btn-back" id="btnPayBack">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+          </svg>
+          <span id="lblPayBack"></span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /formCol -->
+
+  <!-- Right: order summary -->
+  <aside class="checkout-order-summary" id="orderSummary"></aside>
+
+</div><!-- /checkout-body -->
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/core/app.js"></script>
+<script src="../js/core/db.js"></script>
+<script src="../js/core/auth.js"></script>
+<script src="../js/core/payment.js"></script>
+<script>
+/* ================================================================
+   Checkout page controller
+   ================================================================ */
+(function () {
+  'use strict';
+
+  /* ---- i18n ---- */
+  const getLang = () => localStorage.getItem('b3d_lang') || 'ar';
+  const isAr    = () => getLang() === 'ar';
+
+  const TX = {
+    ar: {
+      secure:       'دفع آمن ومشفر',
+      steps:        ['التواصل', 'الشحن', 'الدفع'],
+      titleContact: 'معلومات التواصل',
+      titleShipping:'عنوان الشحن',
+      titlePayment: 'طريقة الدفع',
+      lblFirstName: 'الاسم الأول',
+      lblLastName:  'اسم العائلة',
+      lblEmail:     'البريد الإلكتروني',
+      lblPhone:     'رقم الجوال',
+      lblCity:      'المدينة',
+      lblDistrict:  'الحي',
+      lblAddress:   'العنوان التفصيلي',
+      lblNotes:     'ملاحظات للتوصيل (اختياري)',
+      btnNext:      'التالي',
+      btnBack:      'السابق',
+      btnPay:       'المتابعة للدفع',
+      errRequired:  'مطلوب',
+      errEmail:     'بريد إلكتروني غير صالح',
+      summary:      'ملخص الطلب',
+      items:        'عنصر',
+      subtotal:     'المجموع الفرعي',
+      shipping:     'الشحن',
+      shippingFree: 'مجاني',
+      total:        'الإجمالي',
+      freeShipNote: 'شحن مجاني للطلبات فوق 200 ر.س',
+      sar:          'ر.س',
+      cartEmpty:    'سلة التسوق فارغة',
+      cartEmptyDesc:'أضف منتجات أولاً قبل إتمام الشراء',
+      goShopping:   'تسوق الآن',
+      successTitle: 'تم الطلب بنجاح! 🎉',
+      successDesc:  'شكراً لطلبك. سيتم التواصل معك قريباً لتأكيد التفاصيل.',
+      failTitle:    'فشلت عملية الدفع',
+      failDesc:     'لم تتم عملية الدفع. يمكنك المحاولة مرة أخرى.',
+      orderId:      'رقم الطلب',
+      backToShop:   'متابعة التسوق',
+      retryPay:     'إعادة المحاولة',
+      cities:       ['الرياض','جدة','الدمام','مكة المكرمة','المدينة المنورة','الطائف','تبوك','أبها','الجبيل','الخبر'],
+    },
+    en: {
+      secure:       'Secure Checkout',
+      steps:        ['Contact', 'Shipping', 'Payment'],
+      titleContact: 'Contact Information',
+      titleShipping:'Shipping Address',
+      titlePayment: 'Payment Method',
+      lblFirstName: 'First Name',
+      lblLastName:  'Last Name',
+      lblEmail:     'Email Address',
+      lblPhone:     'Phone Number',
+      lblCity:      'City',
+      lblDistrict:  'District / Neighbourhood',
+      lblAddress:   'Street Address',
+      lblNotes:     'Delivery notes (optional)',
+      btnNext:      'Continue',
+      btnBack:      'Back',
+      btnPay:       'Proceed to Payment',
+      errRequired:  'Required',
+      errEmail:     'Invalid email address',
+      summary:      'Order Summary',
+      items:        'item(s)',
+      subtotal:     'Subtotal',
+      shipping:     'Shipping',
+      shippingFree: 'Free',
+      total:        'Total',
+      freeShipNote: 'Free shipping on orders above 200 SAR',
+      sar:          'SAR',
+      cartEmpty:    'Your cart is empty',
+      cartEmptyDesc:'Add products before checking out',
+      goShopping:   'Shop Now',
+      successTitle: 'Order Placed Successfully! 🎉',
+      successDesc:  'Thank you for your order. We will contact you shortly to confirm the details.',
+      failTitle:    'Payment Failed',
+      failDesc:     'Your payment could not be processed. Please try again.',
+      orderId:      'Order ID',
+      backToShop:   'Continue Shopping',
+      retryPay:     'Retry Payment',
+      cities:       ['Riyadh','Jeddah','Dammam','Makkah','Madinah','Taif','Tabuk','Abha','Jubail','Khobar'],
+    },
+  };
+
+  const t    = k => (TX[getLang()] || TX.en)[k] || (TX.en)[k] || k;
+  const $    = id => document.getElementById(id);
+  const lang = getLang();
+
+  /* ---- Apply lang to DOM ---- */
+  document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
+  document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+
+  /* ---- State ---- */
+  let currentStep = 1;
+  let orderData   = {};
+  let cart        = [];
+  let orderId     = null;
+
+  /* ---- Load cart ---- */
+  function loadCart() {
+    try { cart = JSON.parse(localStorage.getItem('b3d_cart') || '[]'); } catch (_) { cart = []; }
+  }
+
+  /* ---- Calc totals ---- */
+  function calcTotals() {
+    const subtotal = cart.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+    const shipping = subtotal >= 200 ? 0 : 25;
+    return { subtotal, shipping, total: subtotal + shipping };
+  }
+
+  /* ---- Render order summary sidebar ---- */
+  function renderSummary() {
+    const el = $('orderSummary');
+    if (!el) return;
+    const { subtotal, shipping, total } = calcTotals();
+    const sar = t('sar');
+    const count = cart.reduce((s, i) => s + (i.qty || 1), 0);
+
+    const itemsHtml = cart.map(item => {
+      const name = (item.title && (item.title[lang] || item.title.en)) || item.title || '';
+      const img  = (typeof ProductStore !== 'undefined')
+                   ? ProductStore.resolveImage(item)
+                   : (typeof getProductPlaceholderSvg !== 'undefined' ? getProductPlaceholderSvg(item) : '');
+      return `
+        <div class="co-summary-item">
+          <img class="co-summary-img" src="${img}" alt="${name}" loading="lazy"/>
+          <div style="flex:1;min-width:0">
+            <div class="co-summary-item-name">${name}</div>
+            <div class="co-summary-item-meta">${item.material || ''} × ${item.qty || 1}</div>
+          </div>
+          <div class="co-summary-item-price">${((item.price || 0) * (item.qty || 1)).toFixed(0)} ${sar}</div>
+        </div>`;
+    }).join('');
+
+    const freeShipHtml = shipping === 0
+      ? `<div class="co-total-free-ship">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+           ${t('freeShipNote')}
+         </div>`
+      : '';
+
+    el.innerHTML = `
+      <div class="co-summary-header">
+        <span class="co-summary-title">${t('summary')}</span>
+        <span class="co-summary-count">${count} ${t('items')}</span>
+      </div>
+      <div class="co-summary-items">${itemsHtml}</div>
+      <div class="co-summary-totals">
+        <div class="co-total-row">
+          <span>${t('subtotal')}</span>
+          <span>${subtotal.toFixed(0)} ${sar}</span>
+        </div>
+        <div class="co-total-row">
+          <span>${t('shipping')}</span>
+          <span>${shipping === 0 ? t('shippingFree') : shipping + ' ' + sar}</span>
+        </div>
+        ${freeShipHtml}
+        <div class="co-total-row co-total-row--grand">
+          <span>${t('total')}</span>
+          <span>${total.toFixed(0)} ${sar}</span>
+        </div>
+      </div>`;
+  }
+
+  /* ---- Render steps indicator ---- */
+  function renderSteps() {
+    const el = $('checkoutSteps');
+    if (!el) return;
+    const labels = t('steps');
+    el.innerHTML = labels.map((label, i) => {
+      const n   = i + 1;
+      const cls = n < currentStep ? 'done' : n === currentStep ? 'active' : '';
+      const numContent = n < currentStep
+        ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'
+        : n;
+      return `
+        <div class="checkout-step ${cls}">
+          <div class="checkout-step__num">${numContent}</div>
+          <span class="checkout-step__label">${label}</span>
+        </div>`;
+    }).join('');
+  }
+
+  /* ---- Show a step ---- */
+  function showStep(n) {
+    currentStep = n;
+    ['sectionContact', 'sectionShipping', 'sectionPayment'].forEach((id, i) => {
+      const el = $(id);
+      if (el) el.classList.toggle('active', i + 1 === n);
+    });
+    renderSteps();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---- Field validation helpers ---- */
+  function showErr(errId, msgId, msg) {
+    const e = $(errId), m = $(msgId);
+    if (e) e.style.display = 'flex';
+    if (m) m.textContent = msg;
+  }
+  function hideErr(errId) { const e = $(errId); if (e) e.style.display = 'none'; }
+
+  /* ---- Static labels ---- */
+  function applyLabels() {
+    const set = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+    set('secureLabel',   t('secure'));
+    set('titleContact',  t('titleContact'));
+    set('titleShipping', t('titleShipping'));
+    set('titlePayment',  t('titlePayment'));
+    set('lblFirstName', t('lblFirstName'));
+    set('lblLastName',  t('lblLastName'));
+    set('lblEmail',      t('lblEmail'));
+    set('lblPhone',      t('lblPhone'));
+    set('lblCity',       t('lblCity'));
+    set('lblDistrict',   t('lblDistrict'));
+    set('lblAddress',    t('lblAddress'));
+    set('lblNotes',      t('lblNotes'));
+    set('lblContactNext',t('btnNext'));
+    set('lblBack',       t('btnBack'));
+    set('lblShipNext',   t('btnPay'));
+    set('lblPayBack',    t('btnBack'));
+
+    // Populate city select
+    const cityEl = $('city');
+    if (cityEl) {
+      cityEl.innerHTML = t('cities').map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+  }
+
+  /* ---- Step 1 → 2 ---- */
+  $('btnContactNext')?.addEventListener('click', () => {
+    const firstName = $('firstName').value.trim();
+    const lastName  = $('lastName').value.trim();
+    const email     = $('email').value.trim();
+    let valid = true;
+
+    if (!firstName) {
+      showErr('firstNameErr', 'firstNameErrMsg', t('errRequired'));
+      $('firstName').classList.add('error'); valid = false;
+    } else {
+      hideErr('firstNameErr'); $('firstName').classList.remove('error');
+    }
+    if (!lastName) {
+      showErr('lastNameErr', 'lastNameErrMsg', t('errRequired'));
+      $('lastName').classList.add('error'); valid = false;
+    } else {
+      hideErr('lastNameErr'); $('lastName').classList.remove('error');
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showErr('emailErr', 'emailErrMsg', t('errEmail'));
+      $('email').classList.add('error'); valid = false;
+    } else {
+      hideErr('emailErr'); $('email').classList.remove('error');
+    }
+    if (!valid) return;
+
+    orderData.firstName = firstName;
+    orderData.lastName  = lastName;
+    orderData.nameEn    = firstName + (lastName ? ' ' + lastName : '');
+    orderData.nameAr    = firstName + (lastName ? ' ' + lastName : '');
+    orderData.email     = email;
+    orderData.phone     = $('phone').value.trim();
+    showStep(2);
+  });
+
+  /* ---- Step 2 back ---- */
+  $('btnShipBack')?.addEventListener('click', () => showStep(1));
+
+  /* ---- Step 2 → 3 ---- */
+  $('btnShipNext')?.addEventListener('click', async () => {
+    const district = $('district').value.trim();
+    const address  = $('address').value.trim();
+    let valid = true;
+
+    if (!district) {
+      showErr('districtErr', 'districtErrMsg', t('errRequired')); valid = false;
+    } else hideErr('districtErr');
+
+    if (!address) {
+      showErr('addressErr', 'addressErrMsg', t('errRequired')); valid = false;
+    } else hideErr('addressErr');
+
+    if (!valid) return;
+
+    const cityEl  = $('city');
+    orderData.cityEn  = cityEl?.value || '';
+    orderData.cityAr  = cityEl?.value || '';
+    orderData.district= district;
+    orderData.address = address + (district ? ', ' + district : '');
+    orderData.notes   = $('notes').value.trim();
+    orderData.items   = cart;
+    orderData.total   = calcTotals().total;
+
+    const btn = $('btnShipNext');
+    btn.classList.add('loading'); btn.disabled = true;
+
+    const result = await PaymentService.createOrder(orderData);
+
+    btn.classList.remove('loading'); btn.disabled = false;
+
+    if (!result.ok) {
+      if (typeof Toast !== 'undefined') Toast.show(isAr() ? 'حدث خطأ، يرجى المحاولة' : 'An error occurred, please try again', 'error');
+      return;
+    }
+
+    orderId = result.orderId;
+    showStep(3);
+    renderPaymentForm(orderId, orderData.total);
+  });
+
+  /* ---- Step 3 back ---- */
+  $('btnPayBack')?.addEventListener('click', () => showStep(2));
+
+  /* ---- Render Moyasar / demo payment form ---- */
+  function renderPaymentForm(oid, amount) {
+    const desc = isAr()
+      ? 'طلب Balance 3D رقم ' + oid
+      : 'Balance 3D Order ' + oid;
+    PaymentService.renderMoyasarForm('moyasarContainer', oid, amount, desc);
+  }
+
+  /* ---- Show confirmation screen ---- */
+  function showConfirmation(status, oid) {
+    $('checkoutBody').style.display  = 'none';
+    $('checkoutSteps').style.display = 'none';
+    $('confirmView').style.display   = 'block';
+
+    const paid = status === 'paid';
+    const sar  = t('sar');
+
+    $('confirmBox').innerHTML = `
+      <div class="checkout-confirm__icon checkout-confirm__icon--${paid ? 'success' : 'failed'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          ${paid
+            ? '<polyline points="20 6 9 17 4 12"/>'
+            : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+        </svg>
+      </div>
+      <h1>${paid ? t('successTitle') : t('failTitle')}</h1>
+      <p>${paid ? t('successDesc') : t('failDesc')}</p>
+      ${oid ? `<div class="checkout-confirm__order-id">${t('orderId')}: ${oid}</div>` : ''}
+      <div class="checkout-confirm__actions">
+        <a href="../pages/products.html" class="btn btn-outline">${t('backToShop')}</a>
+        ${!paid && oid ? `<button type="button" class="btn btn-primary" onclick="retryPayment()">${t('retryPay')}</button>` : ''}
+      </div>`;
+
+    if (paid) {
+      // Clear the cart on success
+      localStorage.removeItem('b3d_cart');
+      PaymentService.clearPendingOrder();
+    }
+  }
+
+  /* ---- Retry payment ---- */
+  window.retryPayment = function () {
+    $('checkoutBody').style.display  = '';
+    $('checkoutSteps').style.display = '';
+    $('confirmView').style.display   = 'none';
+    showStep(3);
+    if (orderId) renderPaymentForm(orderId, calcTotals().total);
+  };
+
+  /* ---- Handle return from payment gateway ---- */
+  async function handleReturn() {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const oid    = params.get('order');
+
+    if (!status && !oid) return false;
+
+    // Verify with PaymentService
+    const result = await PaymentService.verifyCallback(params);
+    orderId = result.orderId || oid;
+    showConfirmation(result.status, orderId);
+    return true;
+  }
+
+  /* ---- Empty cart guard ---- */
+  function showEmptyCart() {
+    $('checkoutBody').style.display  = 'none';
+    $('checkoutSteps').style.display = 'none';
+    $('confirmView').style.display   = 'block';
+    $('confirmBox').innerHTML = `
+      <div class="checkout-confirm__icon checkout-confirm__icon--failed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+      </div>
+      <h1>${t('cartEmpty')}</h1>
+      <p>${t('cartEmptyDesc')}</p>
+      <div class="checkout-confirm__actions">
+        <a href="../pages/products.html" class="btn btn-primary">${t('goShopping')}</a>
+      </div>`;
+  }
+
+  /* ---- Pre-fill from session if logged in ---- */
+  async function prefillFromSession() {
+    if (typeof AuthService === 'undefined') return;
+    try {
+      const user = await AuthService.getUser();
+      if (!user) return;
+      const firstField = $('firstName');
+      const lastField  = $('lastName');
+      const emailField = $('email');
+      const phoneField = $('phone');
+      const fn = user.firstName || user.first_name || (user.name_en || user.nameEn || '').split(' ')[0] || '';
+      const ln = user.lastName  || user.last_name  || (user.name_en || user.nameEn || '').split(' ').slice(1).join(' ') || '';
+      if (firstField && !firstField.value && fn) firstField.value = fn;
+      if (lastField  && !lastField.value  && ln) lastField.value  = ln;
+      if (emailField && !emailField.value && user.email) emailField.value = user.email;
+      if (phoneField && !phoneField.value && user.phone) phoneField.value = user.phone;
+    } catch (_) {}
+  }
+
+  /* ---- Init ---- */
+  async function init() {
+    applyLabels();
+    loadCart();
+
+    PaymentService.init();
+
+    // Handle gateway return URL
+    const wasReturn = await handleReturn();
+    if (wasReturn) return;
+
+    // Guard empty cart
+    if (cart.length === 0) { showEmptyCart(); return; }
+
+    renderSummary();
+    renderSteps();
+    showStep(1);
+    prefillFromSession();
+
+    if (typeof Toast !== 'undefined') Toast.init();
+  }
+
+  init().catch(e => console.error('[Checkout]', e));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balance 3D — إنشاء حساب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../css/tokens.css"/>
+  <link rel="stylesheet" href="../css/base.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/auth.css"/>
+</head>
+<body>
+<div class="auth-page page-enter">
+
+  <div class="auth-visual">
+    <div class="auth-visual__bg"></div>
+    <div class="auth-visual__grid"></div>
+    <a href="../index.html" class="auth-visual__logo">
+      <div class="auth-visual__logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="12 2 2 7 12 12 22 7"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="auth-visual__logo-name">Balance 3D</span>
+    </a>
+    <div class="auth-visual__content">
+      <h2 class="auth-visual__heading" id="vHeading"></h2>
+      <p  class="auth-visual__desc" id="vDesc"></p>
+      <div class="auth-visual__features" id="vFeatures"></div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="auth-form-header">
+      <h1 class="auth-form-header__title" id="formTitle"></h1>
+      <p  class="auth-form-header__subtitle" id="formSubtitle"></p>
+    </div>
+
+    <div class="auth-error-banner" id="authError">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="authErrorMsg"></span>
+    </div>
+
+    <div class="auth-success" id="authSuccess">
+      <div class="auth-success__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h3 id="successTitle"></h3>
+      <p  id="successDesc"></p>
+      <a href="login.html" class="btn btn-primary" id="successBtn" style="margin-top:var(--space-2)"></a>
+    </div>
+
+    <form id="registerForm" novalidate style="display:flex;flex-direction:column;gap:var(--space-5)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+        <div class="form-group">
+          <label class="form-label required" for="firstName" id="lblFirstName"></label>
+          <input type="text" id="firstName" class="form-input" autocomplete="given-name"/>
+          <span class="form-error" id="firstNameErr" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+            <span id="firstNameErrMsg"></span>
+          </span>
+        </div>
+        <div class="form-group">
+          <label class="form-label required" for="lastName" id="lblLastName"></label>
+          <input type="text" id="lastName" class="form-input" autocomplete="family-name"/>
+          <span class="form-error" id="lastNameErr" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+            <span id="lastNameErrMsg"></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required" for="email" id="lblEmail"></label>
+        <input type="email" id="email" class="form-input" autocomplete="email" inputmode="email"/>
+        <span class="form-error" id="emailErr" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+          <span id="emailErrMsg"></span>
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required" for="password" id="lblPassword"></label>
+        <div class="input-password-wrap">
+          <input type="password" id="password" class="form-input" autocomplete="new-password"/>
+          <button type="button" class="input-toggle-pw" id="togglePw">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" id="eyeIcon">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <span class="form-hint" id="pwHint"></span>
+        <span class="form-error" id="passwordErr" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+          <span id="passwordErrMsg"></span>
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required" for="confirmPw" id="lblConfirm"></label>
+        <input type="password" id="confirmPw" class="form-input" autocomplete="new-password"/>
+        <span class="form-error" id="confirmErr" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+          <span id="confirmErrMsg"></span>
+        </span>
+      </div>
+
+      <p id="termsText" style="font-size:var(--text-xs);color:var(--clr-text-muted);line-height:1.6"></p>
+
+      <button type="submit" class="btn btn-primary btn-lg" id="registerBtn" style="width:100%">
+        <span id="registerBtnLabel"></span>
+      </button>
+
+      <div class="divider-text"><span id="lblOr"></span></div>
+
+      <div class="auth-social-grid">
+        <button type="button" class="auth-social-btn" id="btnGoogle">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          <span id="lblGoogle"></span>
+        </button>
+        <button type="button" class="auth-social-btn auth-social-btn--apple" id="btnApple">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.56-1.31 3.1-2.54 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          <span id="lblApple"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="../js/core/app.js"></script>
+<script src="../js/core/db.js"></script>
+<script src="../js/core/auth.js"></script>
+<script>
+(function () {
+  'use strict';
+  const getLang = () => localStorage.getItem('b3d_lang') || 'ar';
+  const TX = {
+    ar: {
+      heading:'انضم لأكبر مجتمع طباعة ثلاثية الأبعاد في السعودية',
+      desc:'أنشئ حسابك واستمتع بتجربة تسوق متميزة مع تتبع الطلبات وطلبات الطباعة المخصصة.',
+      features:['تتبع طلباتك في الوقت الفعلي','حفظ التصاميم والمفضلة','عروض حصرية لأعضاء المنصة'],
+      formTitle:'إنشاء حساب جديد',
+      subtitle:'لديك حساب بالفعل؟ <a href="login.html" style="color:var(--clr-accent);font-weight:600">تسجيل الدخول</a>',
+      lblFirstName:'الاسم الأول',lblLastName:'اسم العائلة',
+      lblEmail:'البريد الإلكتروني',lblPassword:'كلمة المرور',
+      lblConfirm:'تأكيد كلمة المرور',
+      pwHint:'٦ أحرف على الأقل',
+      terms:'بالتسجيل توافق على <a href="#" style="color:var(--clr-accent)">الشروط والأحكام</a> و<a href="#" style="color:var(--clr-accent)">سياسة الخصوصية</a>',
+      registerBtn:'إنشاء الحساب',
+      lblOr:'أو سجّل بـ',
+      lblGoogle:'Google',lblApple:'Apple',
+      successTitle:'تم إنشاء حسابك!',
+      successDesc:'تحقق من بريدك الإلكتروني لتأكيد حسابك.',
+      successBtn:'تسجيل الدخول',
+      errRequired:'مطلوب',errEmail:'بريد إلكتروني غير صالح',
+      errPwShort:'٦ أحرف على الأقل',errPwMatch:'كلمتا المرور غير متطابقتين',
+    },
+    en: {
+      heading:'Join Saudi Arabia\'s Top 3D Printing Community',
+      desc:'Create your account for a premium shopping experience with order tracking and custom print requests.',
+      features:['Track your orders in real time','Save designs and favourites','Exclusive member offers'],
+      formTitle:'Create Account',
+      subtitle:'Already have an account? <a href="login.html" style="color:var(--clr-accent);font-weight:600">Sign In</a>',
+      lblFirstName:'First Name',lblLastName:'Last Name',
+      lblEmail:'Email Address',lblPassword:'Password',
+      lblConfirm:'Confirm Password',
+      pwHint:'Minimum 6 characters',
+      terms:'By registering you agree to our <a href="#" style="color:var(--clr-accent)">Terms</a> and <a href="#" style="color:var(--clr-accent)">Privacy Policy</a>',
+      registerBtn:'Create Account',
+      lblOr:'or register with',
+      lblGoogle:'Google',lblApple:'Apple',
+      successTitle:'Account Created!',
+      successDesc:'Check your email to confirm your account.',
+      successBtn:'Sign In',
+      errRequired:'Required',errEmail:'Invalid email address',
+      errPwShort:'Minimum 6 characters',errPwMatch:'Passwords do not match',
+    },
+  };
+  const t = k => (TX[getLang()]||TX.en)[k]||(TX.en)[k]||k;
+  const $ = id => document.getElementById(id);
+
+  function applyLang() {
+    const lang = getLang();
+    document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
+    document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+    $('vHeading').textContent    = t('heading');
+    $('vDesc').textContent       = t('desc');
+    $('vFeatures').innerHTML     = t('features').map(f =>
+      `<div class="auth-visual__feature"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span>${f}</span></div>`).join('');
+    $('formTitle').textContent   = t('formTitle');
+    $('formSubtitle').innerHTML  = t('subtitle');
+    $('lblFirstName').textContent = t('lblFirstName');
+    $('lblLastName').textContent  = t('lblLastName');
+    $('lblEmail').textContent    = t('lblEmail');
+    $('lblPassword').textContent = t('lblPassword');
+    $('lblConfirm').textContent  = t('lblConfirm');
+    $('pwHint').textContent      = t('pwHint');
+    $('termsText').innerHTML     = t('terms');
+    $('registerBtnLabel').textContent = t('registerBtn');
+    $('lblOr').textContent       = t('lblOr');
+    $('lblGoogle').textContent   = t('lblGoogle');
+    $('lblApple').textContent    = t('lblApple');
+    $('successTitle').textContent= t('successTitle');
+    $('successDesc').textContent = t('successDesc');
+    $('successBtn').textContent  = t('successBtn');
+  }
+
+  function showErr(errId, msgId, msg) { const e=$(errId),m=$(msgId); if(e)e.style.display='flex'; if(m)m.textContent=msg; }
+  function hideErr(errId)             { const e=$(errId); if(e)e.style.display='none'; }
+  function showBanner(msg)            { $('authErrorMsg').textContent=msg; $('authError').classList.add('show'); }
+  function hideBanner()               { $('authError').classList.remove('show'); }
+
+  $('togglePw').addEventListener('click', () => {
+    const pw=$('password'); const show=pw.type==='password'; pw.type=show?'text':'password';
+    $('eyeIcon').innerHTML=show
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  });
+
+  $('registerForm').addEventListener('submit', async e => {
+    e.preventDefault(); hideBanner();
+    const firstName = $('firstName').value.trim();
+    const lastName  = $('lastName').value.trim();
+    const email  = $('email').value.trim();
+    const pw     = $('password').value;
+    const cpw    = $('confirmPw').value;
+    let valid = true;
+
+    if (!firstName) { showErr('firstNameErr','firstNameErrMsg',t('errRequired')); valid=false; } else hideErr('firstNameErr');
+    if (!lastName)  { showErr('lastNameErr','lastNameErrMsg',t('errRequired'));   valid=false; } else hideErr('lastNameErr');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('emailErr','emailErrMsg',t('errEmail')); valid=false; } else hideErr('emailErr');
+    if (!pw || pw.length < 6) { showErr('passwordErr','passwordErrMsg',t('errPwShort')); valid=false; } else hideErr('passwordErr');
+    if (pw !== cpw) { showErr('confirmErr','confirmErrMsg',t('errPwMatch')); valid=false; } else hideErr('confirmErr');
+    if (!valid) return;
+
+    const btn = $('registerBtn');
+    btn.classList.add('btn--loading'); btn.disabled = true;
+    const res = await AuthService.signUpEmail(email, pw, { firstName, lastName, lang: getLang() });
+    btn.classList.remove('btn--loading'); btn.disabled = false;
+
+    if (!res.ok) { showBanner(res.error); return; }
+
+    $('registerForm').style.display = 'none';
+    $('authSuccess').classList.add('show');
+  });
+
+  $('btnGoogle').addEventListener('click', async () => { hideBanner(); const r=await AuthService.signInGoogle(); if(!r.ok) showBanner(r.error); });
+  $('btnApple').addEventListener('click',  async () => { hideBanner(); const r=await AuthService.signInApple();  if(!r.ok) showBanner(r.error); });
+
+  applyLang();
+  if (typeof Toast !== 'undefined') Toast.init();
+})();
+</script>
+</body>
+</html>
