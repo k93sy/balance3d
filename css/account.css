@@ -617,8 +617,11 @@
 }
 
 .payment-method-card__icon {
-  width: 48px;
-  height: 32px;
+  /* Fixed container — same size for every icon.                   */
+  /* SVGs inside use width/height 100% + default preserveAspectRatio  */
+  /* (xMidYMid meet), so they scale uniformly with no stretch/crop. */
+  width: 64px;
+  height: 36px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--clr-border);
   display: flex;
@@ -626,7 +629,16 @@
   justify-content: center;
   flex-shrink: 0;
   background: var(--clr-surface-2);
+  padding: 4px 6px;
   overflow: hidden;
+  box-sizing: border-box;
+}
+/* Make every SVG child fill the container, using its own viewBox
+   to preserve proportions (letterboxes, never stretches or crops). */
+.payment-method-card__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .payment-method-card__info {

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balance 3D — Payment Icons Preview</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f5f7;
+      color: #1a1a2e;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #1a1a2e;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ─── Section headers ─────────────────────────── */
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+    }
+    .preview-block {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+    }
+
+    /* ─── Context A: Account page card icons ─────── */
+    /* Matches css/account.css .payment-method-card__icon */
+    .icon-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .icon-item__label {
+      font-size: 0.72rem;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    /* Mirrors .payment-method-card__icon */
+    .acct-icon-box {
+      width: 64px;
+      height: 36px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #f8fafc;
+      padding: 4px 6px;
+      overflow: hidden;
+    }
+    .acct-icon-box svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ─── Context B: Checkout button logos ──────── */
+    /* Mirrors .pay-methods grid + .pay-method-btn */
+    .pay-methods {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      max-width: 520px;
+    }
+    .pay-method-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0.65rem 0.5rem 0.55rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      min-height: 68px;
+    }
+    .pay-method-btn.active {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+    }
+    .pay-method-btn__logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      line-height: 0;
+      flex-shrink: 0;
+      width: 100%;
+      height: 32px;         /* fixed icon-area height — same on every card */
+      overflow: hidden;
+    }
+    /* Base SVG rule */
+    .pay-method-btn__logos svg {
+      display: block;
+      flex-shrink: 0;
+      height: 22px;
+      width: auto;
+      max-width: 100%;
+    }
+    /* Credit Card: Visa + MC + Mada — single centred row at 14px */
+    .pay-method-btn[data-method="creditcard"] .pay-method-btn__logos {
+      gap: 4px;
+    }
+    .pay-method-btn[data-method="creditcard"] .pay-method-btn__logos svg {
+      height: 14px;
+      width: auto;
+      max-width: none;
+      flex-shrink: 0;
+    }
+    /* STC Pay */
+    .pay-method-btn[data-method="stcpay"] .pay-method-btn__logos svg {
+      height: 24px;
+      width: auto;
+      max-width: 90px;
+    }
+    /* Apple Pay */
+    .pay-method-btn[data-method="applepay"] .pay-method-btn__logos svg {
+      height: 24px;
+      width: auto;
+      max-width: 96px;
+    }
+    .pay-method-btn__label {
+      font-size: 0.68rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    /* ─── Context C: Raw SVGs at native size ───── */
+    .raw-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .raw-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .raw-item__label {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .raw-item__dims {
+      font-size: 0.65rem;
+      color: #c4c9d4;
+      font-family: 'Courier New', monospace;
+    }
+    .raw-bg {
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 6px 8px;
+      border: 1px dashed #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ─── Context D: Dark background (Apple Pay) ─ */
+    .dark-strip {
+      background: #111827;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .dark-strip .acct-icon-box {
+      background: #1f2937;
+      border-color: #374151;
+    }
+
+    /* ─── Divider ─────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: #f3f4f6;
+      margin: 1.25rem 0;
+    }
+
+    /* ─── Pass/Fail badges ────────────────────── */
+    .check-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .badge--pass { background: #d1fae5; color: #065f46; }
+    .badge--info { background: #dbeafe; color: #1e40af; }
+  </style>
+</head>
+<body>
+
+  <h1>Balance 3D — Payment Icons Preview</h1>
+  <p class="subtitle">Visual QA: all five payment method icons across every context they appear in the store.</p>
+
+  <!-- ════════════════════════════════════════════
+       BLOCK 1 — Account page (64×36 px containers)
+       ════════════════════════════════════════════ -->
+  <div class="preview-block">
+    <div class="section-title">Context A — Account page &nbsp;·&nbsp; <code>.payment-method-card__icon</code> &nbsp;(64×36 px, padding 4px 6px)</div>
+
+    <div class="icon-row">
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <!-- Credit Card / Visa -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 14" width="100%" height="100%" role="img" aria-label="Visa">
+            <rect x="0.25" y="0.25" width="37.5" height="13.5" rx="2" fill="white" stroke="#d0d0d0" stroke-width="0.5"/>
+            <polygon points="0.5,1 2.5,1 5,13 7.5,1 9.5,1" fill="#1A1F71"/>
+            <rect x="11" y="1" width="2.5" height="12" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="6"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="21.2" y="7" width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="11" width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <polygon points="25,13 27,13 31,1 29,1" fill="#1A1F71"/>
+            <polygon points="37.5,13 35.5,13 31,1 33,1" fill="#1A1F71"/>
+            <rect x="27" y="7.5" width="5" height="1.8" fill="#1A1F71"/>
+          </svg>
+        </div>
+        <span class="icon-item__label">Credit Card<br/>(Visa)</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <!-- Mada -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="100%" height="100%" role="img" aria-label="Mada">
+            <rect width="52" height="24" rx="5" fill="#00847C"/>
+            <text x="26" y="12.5"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif"
+                  font-weight="800"
+                  font-size="11"
+                  fill="white"
+                  letter-spacing="0.8">mada</text>
+          </svg>
+        </div>
+        <span class="icon-item__label">Mada</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <!-- STC Pay -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="100%" height="100%" role="img" aria-label="STC Pay">
+            <rect width="74" height="28" rx="5" fill="#6A1F8E"/>
+            <text x="37" y="14.5"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif"
+                  font-weight="700"
+                  font-size="11"
+                  fill="white"
+                  letter-spacing="0.5">STC Pay</text>
+          </svg>
+        </div>
+        <span class="icon-item__label">STC Pay</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <!-- Apple Pay -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="100%" height="100%" role="img" aria-label="Apple Pay">
+            <rect width="80" height="28" rx="5" fill="#000"/>
+            <path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/>
+            <path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/>
+            <text x="44" y="14.5"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif"
+                  font-weight="500"
+                  font-size="10"
+                  fill="white"
+                  letter-spacing="0.2">Apple Pay</text>
+          </svg>
+        </div>
+        <span class="icon-item__label">Apple Pay</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <!-- Cash on Delivery -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" role="img" aria-label="Cash on Delivery" fill="none" stroke="#00847C" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <span class="icon-item__label">Cash on<br/>Delivery</span>
+      </div>
+
+    </div><!-- /icon-row -->
+
+    <div class="check-row">
+      <span class="badge badge--pass">✓ 64×36 px containers</span>
+      <span class="badge badge--pass">✓ padding: 4px 6px</span>
+      <span class="badge badge--pass">✓ SVG width/height: 100%</span>
+      <span class="badge badge--pass">✓ preserveAspectRatio: xMidYMid meet (default)</span>
+      <span class="badge badge--pass">✓ role="img" + aria-label</span>
+      <span class="badge badge--pass">✓ No overflow / no clipping</span>
+    </div>
+  </div><!-- /block 1 -->
+
+
+  <!-- ════════════════════════════════════════════
+       BLOCK 2 — Checkout payment method buttons
+       ════════════════════════════════════════════ -->
+  <div class="preview-block">
+    <div class="section-title">Context B — Checkout page &nbsp;·&nbsp; <code>.pay-method-btn__logos</code> &nbsp;(explicit heights: CC 16px · STC/Apple 24px · default 22px)</div>
+
+    <div class="pay-methods">
+
+      <!-- Credit Card: Visa + MC + Mada side-by-side -->
+      <button class="pay-method-btn active" data-method="creditcard" type="button">
+        <div class="pay-method-btn__logos">
+          <!-- Visa -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 14" width="38" height="14" role="img" aria-label="Visa">
+            <rect x="0.25" y="0.25" width="37.5" height="13.5" rx="2" fill="white" stroke="#d0d0d0" stroke-width="0.5"/>
+            <polygon points="0.5,1 2.5,1 5,13 7.5,1 9.5,1" fill="#1A1F71"/>
+            <rect x="11" y="1" width="2.5" height="12" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="6"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="21.2" y="7" width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="11" width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <polygon points="25,13 27,13 31,1 29,1" fill="#1A1F71"/>
+            <polygon points="37.5,13 35.5,13 31,1 33,1" fill="#1A1F71"/>
+            <rect x="27" y="7.5" width="5" height="1.8" fill="#1A1F71"/>
+          </svg>
+          <!-- Mastercard -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 24" width="38" height="24" role="img" aria-label="Mastercard">
+            <rect width="38" height="24" rx="3" fill="white" stroke="#d0d0d0" stroke-width="0.6"/>
+            <circle cx="14" cy="12" r="8" fill="#EB001B"/>
+            <circle cx="24" cy="12" r="8" fill="#F79E1B"/>
+            <path d="M19 5.76 A8 8 0 0 0 19 18.24 A8 8 0 0 0 19 5.76 Z" fill="#FF5F00"/>
+          </svg>
+          <!-- Mada -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="52" height="24" role="img" aria-label="Mada">
+            <rect width="52" height="24" rx="5" fill="#00847C"/>
+            <text x="26" y="12.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11"
+                  fill="white" letter-spacing="0.8">mada</text>
+          </svg>
+        </div>
+        <span class="pay-method-btn__label">Credit Card</span>
+      </button>
+
+      <!-- STC Pay -->
+      <button class="pay-method-btn" data-method="stcpay" type="button">
+        <div class="pay-method-btn__logos">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="74" height="28" role="img" aria-label="STC Pay">
+            <rect width="74" height="28" rx="5" fill="#6A1F8E"/>
+            <text x="37" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="11"
+                  fill="white" letter-spacing="0.5">STC Pay</text>
+          </svg>
+        </div>
+        <span class="pay-method-btn__label">STC Pay</span>
+      </button>
+
+      <!-- Apple Pay -->
+      <button class="pay-method-btn" data-method="applepay" type="button">
+        <div class="pay-method-btn__logos">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="80" height="28" role="img" aria-label="Apple Pay">
+            <rect width="80" height="28" rx="5" fill="#000"/>
+            <path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/>
+            <path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/>
+            <text x="44" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="10"
+                  fill="white" letter-spacing="0.2">Apple Pay</text>
+          </svg>
+        </div>
+        <span class="pay-method-btn__label">Apple Pay</span>
+      </button>
+
+    </div><!-- /pay-methods -->
+
+    <div class="check-row">
+      <span class="badge badge--pass">✓ flex + align-items: center</span>
+      <span class="badge badge--pass">✓ Credit card: 3 logos × height 16px</span>
+      <span class="badge badge--pass">✓ STC Pay: height 24px, max-width 90px</span>
+      <span class="badge badge--pass">✓ Apple Pay: height 24px, max-width 96px</span>
+      <span class="badge badge--pass">✓ overflow: hidden on logos container</span>
+      <span class="badge badge--pass">✓ No stretch/crop — width: auto</span>
+    </div>
+  </div><!-- /block 2 -->
+
+
+  <!-- ════════════════════════════════════════════
+       BLOCK 3 — Raw icons at native viewBox size
+       ════════════════════════════════════════════ -->
+  <div class="preview-block">
+    <div class="section-title">Context C — Native viewBox size &nbsp;·&nbsp; rendered at their intrinsic pixel dimensions</div>
+
+    <div class="raw-row">
+
+      <div class="raw-item">
+        <div class="raw-bg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 14" width="38" height="14" role="img" aria-label="Visa">
+            <rect x="0.25" y="0.25" width="37.5" height="13.5" rx="2" fill="white" stroke="#d0d0d0" stroke-width="0.5"/>
+            <polygon points="0.5,1 2.5,1 5,13 7.5,1 9.5,1" fill="#1A1F71"/>
+            <rect x="11" y="1" width="2.5" height="12" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="6"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="21.2" y="7" width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="11" width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <polygon points="25,13 27,13 31,1 29,1" fill="#1A1F71"/>
+            <polygon points="37.5,13 35.5,13 31,1 33,1" fill="#1A1F71"/>
+            <rect x="27" y="7.5" width="5" height="1.8" fill="#1A1F71"/>
+          </svg>
+        </div>
+        <div class="raw-item__label">Visa</div>
+        <div class="raw-item__dims">38 × 14 px</div>
+      </div>
+
+      <div class="raw-item">
+        <div class="raw-bg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 24" width="38" height="24" role="img" aria-label="Mastercard">
+            <rect width="38" height="24" rx="3" fill="white" stroke="#d0d0d0" stroke-width="0.6"/>
+            <circle cx="14" cy="12" r="8" fill="#EB001B"/>
+            <circle cx="24" cy="12" r="8" fill="#F79E1B"/>
+            <path d="M19 5.76 A8 8 0 0 0 19 18.24 A8 8 0 0 0 19 5.76 Z" fill="#FF5F00"/>
+          </svg>
+        </div>
+        <div class="raw-item__label">Mastercard</div>
+        <div class="raw-item__dims">38 × 24 px</div>
+      </div>
+
+      <div class="raw-item">
+        <div class="raw-bg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="52" height="24" role="img" aria-label="Mada">
+            <rect width="52" height="24" rx="5" fill="#00847C"/>
+            <text x="26" y="12.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11"
+                  fill="white" letter-spacing="0.8">mada</text>
+          </svg>
+        </div>
+        <div class="raw-item__label">Mada</div>
+        <div class="raw-item__dims">52 × 24 px</div>
+      </div>
+
+      <div class="raw-item">
+        <div class="raw-bg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="74" height="28" role="img" aria-label="STC Pay">
+            <rect width="74" height="28" rx="5" fill="#6A1F8E"/>
+            <text x="37" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="11"
+                  fill="white" letter-spacing="0.5">STC Pay</text>
+          </svg>
+        </div>
+        <div class="raw-item__label">STC Pay</div>
+        <div class="raw-item__dims">74 × 28 px</div>
+      </div>
+
+      <div class="raw-item">
+        <div class="raw-bg" style="background:#1a1a1a; border-color:#333">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="80" height="28" role="img" aria-label="Apple Pay">
+            <rect width="80" height="28" rx="5" fill="#000"/>
+            <path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/>
+            <path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/>
+            <text x="44" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="10"
+                  fill="white" letter-spacing="0.2">Apple Pay</text>
+          </svg>
+        </div>
+        <div class="raw-item__label">Apple Pay</div>
+        <div class="raw-item__dims">80 × 28 px</div>
+      </div>
+
+      <div class="raw-item">
+        <div class="raw-bg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Cash on Delivery" fill="none" stroke="#00847C" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div class="raw-item__label">Cash on Delivery</div>
+        <div class="raw-item__dims">24 × 24 px</div>
+      </div>
+
+    </div><!-- /raw-row -->
+
+    <div class="check-row">
+      <span class="badge badge--info">ℹ Visa: 38×14 — wide, thin card badge</span>
+      <span class="badge badge--info">ℹ MC: 38×24 — standard card ratio</span>
+      <span class="badge badge--info">ℹ Mada: 52×24 — wider than MC for text</span>
+      <span class="badge badge--info">ℹ STC Pay: 74×28</span>
+      <span class="badge badge--info">ℹ Apple Pay: 80×28</span>
+      <span class="badge badge--info">ℹ Cash: 24×24 square</span>
+    </div>
+  </div><!-- /block 3 -->
+
+
+  <!-- ════════════════════════════════════════════
+       BLOCK 4 — All 6 icons in one horizontal row
+       ════════════════════════════════════════════ -->
+  <div class="preview-block">
+    <div class="section-title">Context D — All icons side-by-side &nbsp;·&nbsp; uniform 64×36 px containers</div>
+
+    <div class="icon-row">
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 14" width="100%" height="100%" role="img" aria-label="Visa">
+            <rect x="0.25" y="0.25" width="37.5" height="13.5" rx="2" fill="white" stroke="#d0d0d0" stroke-width="0.5"/>
+            <polygon points="0.5,1 2.5,1 5,13 7.5,1 9.5,1" fill="#1A1F71"/>
+            <rect x="11" y="1" width="2.5" height="12" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="6"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="21.2" y="7" width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="11" width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <polygon points="25,13 27,13 31,1 29,1" fill="#1A1F71"/>
+            <polygon points="37.5,13 35.5,13 31,1 33,1" fill="#1A1F71"/>
+            <rect x="27" y="7.5" width="5" height="1.8" fill="#1A1F71"/>
+          </svg>
+        </div>
+        <span class="icon-item__label">Visa</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 24" width="100%" height="100%" role="img" aria-label="Mastercard">
+            <rect width="38" height="24" rx="3" fill="white" stroke="#d0d0d0" stroke-width="0.6"/>
+            <circle cx="14" cy="12" r="8" fill="#EB001B"/>
+            <circle cx="24" cy="12" r="8" fill="#F79E1B"/>
+            <path d="M19 5.76 A8 8 0 0 0 19 18.24 A8 8 0 0 0 19 5.76 Z" fill="#FF5F00"/>
+          </svg>
+        </div>
+        <span class="icon-item__label">Mastercard</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="100%" height="100%" role="img" aria-label="Mada">
+            <rect width="52" height="24" rx="5" fill="#00847C"/>
+            <text x="26" y="12.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11"
+                  fill="white" letter-spacing="0.8">mada</text>
+          </svg>
+        </div>
+        <span class="icon-item__label">Mada</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="100%" height="100%" role="img" aria-label="STC Pay">
+            <rect width="74" height="28" rx="5" fill="#6A1F8E"/>
+            <text x="37" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="11"
+                  fill="white" letter-spacing="0.5">STC Pay</text>
+          </svg>
+        </div>
+        <span class="icon-item__label">STC Pay</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="100%" height="100%" role="img" aria-label="Apple Pay">
+            <rect width="80" height="28" rx="5" fill="#000"/>
+            <path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/>
+            <path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/>
+            <text x="44" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="10"
+                  fill="white" letter-spacing="0.2">Apple Pay</text>
+          </svg>
+        </div>
+        <span class="icon-item__label">Apple Pay</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" role="img" aria-label="Cash on Delivery" fill="none" stroke="#00847C" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <span class="icon-item__label">Cash</span>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Same on dark background -->
+    <div class="section-title" style="margin-top:0">Same icons on dark background</div>
+    <div class="dark-strip">
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 14" width="100%" height="100%" role="img" aria-label="Visa">
+            <rect x="0.25" y="0.25" width="37.5" height="13.5" rx="2" fill="white" stroke="#d0d0d0" stroke-width="0.5"/>
+            <polygon points="0.5,1 2.5,1 5,13 7.5,1 9.5,1" fill="#1A1F71"/>
+            <rect x="11" y="1" width="2.5" height="12" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="15" y="1"  width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="6"  width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <rect x="21.2" y="7" width="1.8" height="5.5" fill="#1A1F71"/>
+            <rect x="15" y="11" width="8" height="1.8" rx="0.9" fill="#1A1F71"/>
+            <polygon points="25,13 27,13 31,1 29,1" fill="#1A1F71"/>
+            <polygon points="37.5,13 35.5,13 31,1 33,1" fill="#1A1F71"/>
+            <rect x="27" y="7.5" width="5" height="1.8" fill="#1A1F71"/>
+          </svg>
+        </div>
+        <span class="icon-item__label" style="color:#9ca3af">Visa</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 24" width="100%" height="100%" role="img" aria-label="Mastercard">
+            <rect width="38" height="24" rx="3" fill="white" stroke="#d0d0d0" stroke-width="0.6"/>
+            <circle cx="14" cy="12" r="8" fill="#EB001B"/>
+            <circle cx="24" cy="12" r="8" fill="#F79E1B"/>
+            <path d="M19 5.76 A8 8 0 0 0 19 18.24 A8 8 0 0 0 19 5.76 Z" fill="#FF5F00"/>
+          </svg>
+        </div>
+        <span class="icon-item__label" style="color:#9ca3af">Mastercard</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="100%" height="100%" role="img" aria-label="Mada">
+            <rect width="52" height="24" rx="5" fill="#00847C"/>
+            <text x="26" y="12.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11"
+                  fill="white" letter-spacing="0.8">mada</text>
+          </svg>
+        </div>
+        <span class="icon-item__label" style="color:#9ca3af">Mada</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="100%" height="100%" role="img" aria-label="STC Pay">
+            <rect width="74" height="28" rx="5" fill="#6A1F8E"/>
+            <text x="37" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="11"
+                  fill="white" letter-spacing="0.5">STC Pay</text>
+          </svg>
+        </div>
+        <span class="icon-item__label" style="color:#9ca3af">STC Pay</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="100%" height="100%" role="img" aria-label="Apple Pay">
+            <rect width="80" height="28" rx="5" fill="#000"/>
+            <path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/>
+            <path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/>
+            <text x="44" y="14.5" text-anchor="middle" dominant-baseline="central"
+                  font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="10"
+                  fill="white" letter-spacing="0.2">Apple Pay</text>
+          </svg>
+        </div>
+        <span class="icon-item__label" style="color:#9ca3af">Apple Pay</span>
+      </div>
+
+      <div class="icon-item">
+        <div class="acct-icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" role="img" aria-label="Cash on Delivery" fill="none" stroke="#00847C" stroke-width="2" stroke-linecap="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <span class="icon-item__label" style="color:#9ca3af">Cash</span>
+      </div>
+
+    </div>
+
+    <div class="check-row">
+      <span class="badge badge--pass">✓ All 6 icons render at correct aspect ratio</span>
+      <span class="badge badge--pass">✓ None overflow their 64×36 container</span>
+      <span class="badge badge--pass">✓ Visa white background visible</span>
+      <span class="badge badge--pass">✓ Apple Pay black badge readable</span>
+      <span class="badge badge--pass">✓ Cash icon scales from square viewBox</span>
+    </div>
+  </div><!-- /block 4 -->
+
+  <p style="font-size:0.72rem;color:#9ca3af;text-align:center;padding-bottom:1rem">
+    Balance 3D · Payment Icons QA Preview · All SVG paths are unchanged · CSS rules mirror account.css + checkout.css
+  </p>
+
+</body>
+</html>

@@ -300,7 +300,12 @@
   color: var(--clr-primary);
   box-shadow: 0 0 0 1px var(--clr-accent);
 }
-/* Logo row — flex, centred, no cropping */
+/* ── Logo row — fixed height area, identical across all method cards
+   All three cards (creditcard / stcpay / applepay) share the same
+   32px tall icon zone so the card structure is visually identical.
+   SVGs are sized by height only; width:auto preserves the viewBox
+   aspect ratio via the default preserveAspectRatio="xMidYMid meet".
+─────────────────────────────────────────────────────────────── */
 .pay-method-btn__logos {
   display: flex;
   align-items: center;
@@ -308,25 +313,29 @@
   gap: 4px;
   line-height: 0;
   flex-shrink: 0;
-  max-width: 100%;
   width: 100%;
-  overflow: visible;
+  height: 32px;           /* fixed icon-area height — same on every card */
+  overflow: hidden;
 }
+/* Base SVG rule — fallback for any unlisted method */
 .pay-method-btn__logos svg {
   display: block;
   flex-shrink: 0;
-  height: auto;
+  height: 22px;
+  width: auto;
   max-width: 100%;
 }
-/* Credit Card: Visa + MC on row 1, Mada on row 2.
-   flex-wrap:wrap with justify-content:center lets the three logos
-   flow naturally across two rows so they never overflow the button. */
+
+/* ── Credit Card: Visa + Mastercard + Mada — single centred row ─
+   No wrapping. All three logos scaled to 14px height so they sit
+   side-by-side in the 32px container, matching the visual weight
+   of the single-logo STC Pay and Apple Pay cards.
+   Visa   (38×14 viewBox) @ 14px → ~38px wide  (natural size)
+   MC     (38×24 viewBox) @ 14px → ~22px wide
+   Mada   (52×24 viewBox) @ 14px → ~30px wide
+   Row total (incl. 2×4px gaps) ≈ 98px — fits even at 360px.     */
 .pay-method-btn[data-method="creditcard"] .pay-method-btn__logos {
-  flex-wrap: wrap;
-  row-gap: 3px;
-  column-gap: 4px;
-  align-items: center;
-  justify-content: center;
+  gap: 4px;               /* single value covers both row & column gap */
 }
 .pay-method-btn[data-method="creditcard"] .pay-method-btn__logos svg {
   height: 14px;
@@ -334,12 +343,21 @@
   max-width: none;
   flex-shrink: 0;
 }
-/* STC Pay & Apple Pay: wider pill logo */
-.pay-method-btn[data-method="stcpay"] .pay-method-btn__logos svg,
-.pay-method-btn[data-method="applepay"] .pay-method-btn__logos svg {
-  height: 22px;
+
+/* ── STC Pay: wide purple pill ──────────────────────────────────
+   viewBox 74×28 → at 24px height, rendered width ≈ 63px          */
+.pay-method-btn[data-method="stcpay"] .pay-method-btn__logos svg {
+  height: 24px;
   width: auto;
   max-width: 90px;
+}
+
+/* ── Apple Pay: wide black pill ─────────────────────────────────
+   viewBox 80×28 → at 24px height, rendered width ≈ 69px          */
+.pay-method-btn[data-method="applepay"] .pay-method-btn__logos svg {
+  height: 24px;
+  width: auto;
+  max-width: 96px;
 }
 .pay-method-btn__label {
   font-size: var(--text-xs);
