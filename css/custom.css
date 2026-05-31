@@ -476,6 +476,36 @@
   line-height: 1.75;
 }
 
+/* ---- Responsive ---- */
+@media (max-width: 767px) {
+  .custom-hero {
+    padding-top: calc(var(--nav-height) + var(--space-12));
+    padding-bottom: var(--space-12);
+  }
+  .custom-hero p { font-size: var(--text-base); }
+  .process-section,
+  .upload-section,
+  .materials-section,
+  .faq-section { padding-block: var(--space-16); }
+  .process-grid { margin-top: var(--space-10); gap: var(--space-4); }
+  .upload-layout { gap: var(--space-8); }
+  .dropzone { padding: var(--space-8); }
+  .quote-form-card { padding: var(--space-5); }
+  .form-row { grid-template-columns: 1fr; }
+  .price-estimate { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+  .material-grid { grid-template-columns: 1fr 1fr; }
+  .materials-grid { margin-top: var(--space-10); }
+  .faq-list { margin-top: var(--space-8); }
+  .faq-item__question { padding: var(--space-4); min-height: 52px; }
+  .faq-item__answer p { padding: 0 var(--space-4) var(--space-4); }
+}
+
+@media (max-width: 480px) {
+  .material-grid { grid-template-columns: 1fr; }
+  .material-option { min-height: 52px; }
+  .form-input, .form-select, .form-textarea { font-size: 16px; }
+}
+
 /* ---- Nav override: custom page hero is dark (#0A0A0F), which bleeds
         through the semi-transparent nav backdrop and makes it look
         different from all other pages where the background is light.

@@ -48,7 +48,8 @@ const _authConfigured = () => {
    ---------------------------------------------------------------- */
 const _LS_SESSION = 'b3d_session';
 const _LS_USER    = 'b3d_user';
-const _LS_ADMIN   = 'b3d_admin_auth';
+const _LS_ADMIN       = 'b3d_admin_auth';
+const _ADMIN_CREDS_KEY = 'b3d_admin_creds';  // { username, passwordHash, updatedAt }
 
 const _localGetSession = () => {
   try { const v = localStorage.getItem(_LS_SESSION); return v ? JSON.parse(v) : null; } catch (_) { return null; }
@@ -67,6 +68,34 @@ const _localSetUser = (u) => {
    Demo admin credentials (fallback only — real ones are in DB)
    ---------------------------------------------------------------- */
 const _DEMO_ADMIN = { username: 'admin', password: 'admin123' };
+
+/* Read custom admin credentials saved via the settings panel */
+const _getAdminCreds = () => {
+  try { const v = localStorage.getItem(_ADMIN_CREDS_KEY); return v ? JSON.parse(v) : null; } catch { return null; }
+};
+
+/* Hash a password with SHA-256 via Web Crypto API — never stored in plaintext */
+const _hashPassword = async (password) => {
+  try {
+    const data = new TextEncoder().encode(password);
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    // Fallback for environments where SubtleCrypto is unavailable (very old browsers)
+    return btoa(unescape(encodeURIComponent(password)));
+  }
+};
+
+/* Verify a supplied password against the stored hash (or the demo password) */
+const _verifyAdminPassword = async (password) => {
+  const stored = _getAdminCreds();
+  if (stored && stored.passwordHash) {
+    const hash = await _hashPassword(password);
+    return hash === stored.passwordHash;
+  }
+  // No custom credentials saved yet — compare against built-in demo password
+  return password === _DEMO_ADMIN.password;
+};
 
 /* ----------------------------------------------------------------
    i18n helper (works before App is loaded)
@@ -214,13 +243,19 @@ const AuthService = {
 
   /* ---- Admin login (username/password against DB) ---- */
   async signInAdmin(username, password) {
-    // Demo/offline fallback
+    // Demo/offline fallback — checks custom stored creds first, then _DEMO_ADMIN
     if (!_authConfigured()) {
-      if (username === _DEMO_ADMIN.username && password === _DEMO_ADMIN.password) {
-        sessionStorage.setItem(_LS_ADMIN, '1');
-        return { ok: true };
+      const _stored    = _getAdminCreds();
+      const _expected  = _stored ? _stored.username : _DEMO_ADMIN.username;
+      if (username !== _expected) {
+        return { ok: false, error: _t('auth.error.invalid_credentials', 'Invalid credentials') };
       }
-      return { ok: false, error: _t('auth.error.invalid_credentials', 'Invalid credentials') };
+      const _pwOk = await _verifyAdminPassword(password);
+      if (!_pwOk) {
+        return { ok: false, error: _t('auth.error.invalid_credentials', 'Invalid credentials') };
+      }
+      sessionStorage.setItem(_LS_ADMIN, '1');
+      return { ok: true };
     }
     // With Supabase: sign in as the admin Supabase auth user OR
     // check admin_users table and set a session flag
@@ -251,12 +286,93 @@ const AuthService = {
       sessionStorage.setItem('b3d_admin_name', data.name || 'Admin');
       return { ok: true };
     } catch (_) {
-      // Fallback to demo if RPC not set up yet
-      if (username === _DEMO_ADMIN.username && password === _DEMO_ADMIN.password) {
-        sessionStorage.setItem(_LS_ADMIN, '1');
-        return { ok: true };
+      // Supabase RPC not set up yet — fall back to custom/demo creds
+      const _stored    = _getAdminCreds();
+      const _expected  = _stored ? _stored.username : _DEMO_ADMIN.username;
+      if (username !== _expected) {
+        return { ok: false, error: _t('auth.error.invalid_credentials', 'Invalid credentials') };
       }
-      return { ok: false, error: _t('auth.error.invalid_credentials', 'Invalid credentials') };
+      const _pwOk = await _verifyAdminPassword(password);
+      if (!_pwOk) {
+        return { ok: false, error: _t('auth.error.invalid_credentials', 'Invalid credentials') };
+      }
+      sessionStorage.setItem(_LS_ADMIN, '1');
+      return { ok: true };
+    }
+  },
+
+  /* ---- Update admin username / email ---- */
+  async updateAdminUsername(newUsername) {
+    const trimmed = (newUsername || '').trim();
+    if (!trimmed) return { ok: false, error: 'اسم المستخدم مطلوب' };
+
+    if (!_authConfigured()) {
+      // Local mode: persist to b3d_admin_creds; keep existing password hash
+      const stored = _getAdminCreds();
+      const updatedCreds = {
+        username:     trimmed,
+        passwordHash: stored ? stored.passwordHash : await _hashPassword(_DEMO_ADMIN.password),
+        updatedAt:    new Date().toISOString(),
+      };
+      try {
+        localStorage.setItem(_ADMIN_CREDS_KEY, JSON.stringify(updatedCreds));
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: 'فشل الحفظ: ' + e.message };
+      }
+    }
+
+    // Supabase mode: update the auth email (triggers a confirmation email to the new address)
+    try {
+      const { error } = await _getClient().auth.updateUser({ email: trimmed });
+      if (error) return { ok: false, error: this._mapError(error) };
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
+  },
+
+  /* ---- Update admin password ---- */
+  async updateAdminPassword(currentPassword, newPassword) {
+    if (!newPassword || newPassword.length < 8) {
+      return { ok: false, error: 'يجب أن تكون كلمة المرور 8 أحرف على الأقل' };
+    }
+
+    if (!_authConfigured()) {
+      // Local mode: verify current password first, then hash and store new one
+      const pwOk = await _verifyAdminPassword(currentPassword);
+      if (!pwOk) return { ok: false, error: 'كلمة المرور الحالية غير صحيحة' };
+
+      const stored = _getAdminCreds();
+      const updatedCreds = {
+        username:     stored ? stored.username : _DEMO_ADMIN.username,
+        passwordHash: await _hashPassword(newPassword),
+        updatedAt:    new Date().toISOString(),
+      };
+      try {
+        localStorage.setItem(_ADMIN_CREDS_KEY, JSON.stringify(updatedCreds));
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: 'فشل الحفظ: ' + e.message };
+      }
+    }
+
+    // Supabase mode: verify via re-sign-in, then update password
+    try {
+      // Re-authenticate to confirm the current password before changing
+      const { data: session } = await _getClient().auth.getSession();
+      const email = session?.session?.user?.email;
+      if (email) {
+        const { error: verifyErr } = await _getClient().auth.signInWithPassword({
+          email, password: currentPassword,
+        });
+        if (verifyErr) return { ok: false, error: 'كلمة المرور الحالية غير صحيحة' };
+      }
+      const { error } = await _getClient().auth.updateUser({ password: newPassword });
+      if (error) return { ok: false, error: this._mapError(error) };
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e.message };
     }
   },
 
@@ -326,7 +442,35 @@ const AuthService = {
         .maybeSingle();
       return { ...data.user, ...profile };
     }
-    return _localGetUser();
+
+    // ── Local mode: always re-read from the source of truth ──────
+    // b3d_user is a snapshot from login time; b3d_local_users is the
+    // live record that the admin panel writes when blocking / deleting.
+    const cached = _localGetUser();
+    if (!cached) return null;
+
+    const liveRecord = this._localUsers().find(u => u.id === cached.id);
+
+    if (!liveRecord) {
+      // Account was deleted by admin — sign out immediately and silently
+      _localSetSession(null);
+      _localSetUser(null);
+      this._notifyChange(null);
+      return null;
+    }
+
+    if (liveRecord.status === 'blocked') {
+      // Account was blocked by admin — sign out immediately and silently
+      _localSetSession(null);
+      _localSetUser(null);
+      this._notifyChange(null);
+      return null;
+    }
+
+    // Refresh cached copy with latest data (in case profile was updated)
+    const { password: _, ...safeUser } = liveRecord;
+    _localSetUser(safeUser);
+    return safeUser;
   },
 
   /* ---- Check admin access ---- */
@@ -341,6 +485,18 @@ const AuthService = {
       window.location.href = redirectTo + '?next=' + encodeURIComponent(window.location.pathname);
       return false;
     }
+
+    // In local mode, also verify the user record is still active.
+    // getUser() auto-clears the session if the account is blocked or deleted,
+    // so we just need to check if it returns null.
+    if (!_authConfigured()) {
+      const user = await this.getUser();
+      if (!user) {
+        window.location.href = redirectTo + '?next=' + encodeURIComponent(window.location.pathname);
+        return false;
+      }
+    }
+
     return true;
   },
 
@@ -441,6 +597,18 @@ const AuthService = {
     const users = this._localUsers();
     const user  = users.find(u => u.email === email && u.password === password);
     if (!user) return { ok: false, error: _t('auth.error.invalid_credentials') };
+
+    // Reject login for blocked accounts
+    if (user.status === 'blocked') {
+      const lang = localStorage.getItem('b3d_lang') || 'ar';
+      return {
+        ok: false,
+        error: lang === 'ar'
+          ? 'تم تعليق حسابك. يرجى التواصل مع الدعم للمساعدة.'
+          : 'Your account has been suspended. Please contact support.',
+      };
+    }
+
     const { password: _, ...safeUser } = user;
     _localSetSession({ user: safeUser, type: 'email_session' });
     _localSetUser(safeUser);

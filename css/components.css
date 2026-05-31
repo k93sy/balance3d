@@ -178,6 +178,21 @@
   inset-inline-start: var(--space-3);
   z-index: 1;
 }
+.product-card__discount-chip {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 2;
+  background: #FF3B30;
+  color: #fff;
+  font-size: 12px;
+  font-weight: var(--fw-bold);
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  line-height: 1.3;
+}
 .product-card__wish {
   position: absolute;
   top: var(--space-3);
@@ -260,6 +275,36 @@
   font-weight: var(--fw-regular);
   color: var(--clr-text-muted);
   margin-inline-start: 3px;
+}
+/* ── Discount dual-price row ── */
+.product-card__price--sale {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* Sale (current) price */
+.price-sale {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: #0EA5E9;
+  line-height: 1;
+}
+[dir="rtl"] .price-sale { font-family: var(--font-arabic); }
+/* Original (before-discount) price */
+.price-original {
+  font-size: 13px;
+  font-weight: 400;
+  color: #9CA3AF;
+  text-decoration: line-through;
+  line-height: 1;
+}
+/* SAR unit label inside price spans */
+.price-unit {
+  font-size: 0.78em;
+  font-weight: 400;
+  color: inherit;
 }
 .product-card__rating {
   display: flex;
@@ -623,4 +668,74 @@
   max-width: 480px;
   margin-inline: auto;
   line-height: 1.65;
+}
+
+/* =====================================================
+   RESPONSIVE — COMPONENTS
+   ===================================================== */
+
+/* ---- Product card: mobile polish ---- */
+@media (max-width: 767px) {
+  .product-card__body { padding: var(--space-3) var(--space-4) var(--space-4); }
+  .product-card__title { font-size: var(--text-base); }
+  .product-card__price { font-size: var(--text-lg); }
+  /* Wishlist icon: always visible on touch devices */
+  .product-card__wish {
+    opacity: 1;
+    transform: scale(1);
+  }
+  /* Add-to-cart button: minimum touch target */
+  .product-card .btn,
+  .product-card button { min-height: 44px; }
+}
+
+/* ---- Page hero: mobile ---- */
+@media (max-width: 767px) {
+  .page-hero {
+    padding-block: var(--space-10) var(--space-8);
+    padding-top: calc(var(--nav-height) + var(--space-10));
+  }
+  .page-hero__title { font-size: var(--text-3xl); }
+  .page-hero__desc  { font-size: var(--text-base); }
+}
+
+/* ---- Section header: mobile ---- */
+@media (max-width: 767px) {
+  .section-header { margin-bottom: var(--space-8); }
+  .section-title  { font-size: var(--text-3xl); }
+  .section-desc   { font-size: var(--text-base); }
+}
+
+/* ---- Toast: full-width on very small screens ---- */
+@media (max-width: 480px) {
+  .toast-container {
+    inset-inline-end: var(--space-3);
+    inset-inline-start: var(--space-3);
+    max-width: none;
+    bottom: var(--space-4);
+  }
+  .toast { min-width: 0; max-width: 100%; width: 100%; }
+}
+
+/* ---- Modal: bottom sheet on mobile ---- */
+@media (max-width: 480px) {
+  .modal {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: var(--space-6) var(--space-5) var(--space-8);
+    animation: slideUp var(--dur-slow) var(--ease-out);
+  }
+}
+
+/* ---- Buttons: 44px minimum on mobile ---- */
+@media (max-width: 767px) {
+  .btn-lg, .btn-xl { min-height: 50px; }
+  .btn, .btn-sm    { min-height: 44px; }
+  .btn-xs          { min-height: 36px; }
 }

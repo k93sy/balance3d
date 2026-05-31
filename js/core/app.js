@@ -497,6 +497,8 @@ const App = {
   init() {
     this.applyLang(this.lang, false);
     this.updateCartBadge();
+    /* Execute any pending cart action saved before the guest was sent to login */
+    GuestAuth.resumePendingAction();
   },
 
   t(key) {
@@ -576,6 +578,13 @@ const App = {
         console.warn('[Cart] addToCart: received null/invalid product', productOrPromise);
         return;
       }
+
+      /* ── Auth gate: guests see a login prompt instead of adding to cart ── */
+      if (!GuestAuth.isLoggedIn()) {
+        GuestAuth.showLoginPrompt(product);
+        return;
+      }
+
       const existing = this.cart.find(i => i.id === product.id);
       if (existing) {
         existing.qty++;
@@ -588,6 +597,16 @@ const App = {
     }).catch(err => {
       console.error('[Cart] addToCart failed:', err);
     });
+  },
+
+  /* Direct cart insertion (bypasses auth check — used by GuestAuth.resumePendingAction
+     when the user is already confirmed logged-in after redirect from login page) */
+  _addToCartDirect(product) {
+    if (!product || !product.id) return;
+    const existing = this.cart.find(i => i.id === product.id);
+    if (existing) { existing.qty++; } else { this.cart.push({ ...product, qty: 1 }); }
+    this.saveCart();
+    this.updateCartBadge();
   },
 
   saveCart() {
@@ -605,6 +624,251 @@ const App = {
   // Expose toast shorthand
   toast(msg, type) { Toast.show(msg, type); }
 };
+
+// ============================================================
+// GUEST AUTH  — browse freely, login gate only on purchase
+// ============================================================
+const GuestAuth = {
+  _LS_SESSION: 'b3d_session',
+  _LS_PENDING: 'b3d_pending_action',
+
+  /* ── Synchronous session check (reads localStorage directly) ── */
+  isLoggedIn() {
+    try {
+      const raw = localStorage.getItem(this._LS_SESSION);
+      if (!raw || raw === 'null') return false;
+      const s = JSON.parse(raw);
+      /* Local mode: { user: {...} }  |  Supabase mode: { access_token, user, ... } */
+      return !!(s && (s.user || s.access_token));
+    } catch { return false; }
+  },
+
+  /* ── Pending action (add-to-cart intent saved before login redirect) ── */
+  savePendingAction(action) {
+    try { localStorage.setItem(this._LS_PENDING, JSON.stringify(action)); } catch (_) {}
+  },
+  clearPendingAction() {
+    try { localStorage.removeItem(this._LS_PENDING); } catch (_) {}
+  },
+  getPendingAction() {
+    try { const r = localStorage.getItem(this._LS_PENDING); return r ? JSON.parse(r) : null; }
+    catch { return null; }
+  },
+
+  /* ── Called on every page init — executes the saved action after login ── */
+  resumePendingAction() {
+    if (!this.isLoggedIn()) return;          // still a guest, do nothing
+    const action = this.getPendingAction();
+    if (!action) return;
+    this.clearPendingAction();               // consume it — run once only
+
+    if (action.type === 'add_to_cart' && action.product) {
+      /* Give the page a moment to fully initialize before adding */
+      setTimeout(() => {
+        App._addToCartDirect(action.product);
+        Toast.show(
+          App.lang === 'ar' ? 'تمت الإضافة إلى السلة ✓' : 'Added to cart ✓',
+          'success'
+        );
+      }, 600);
+    }
+  },
+
+  /* ── Inject modal styles once ── */
+  _injectStyles() {
+    if (document.getElementById('guestAuthStyles')) return;
+    const s = document.createElement('style');
+    s.id = 'guestAuthStyles';
+    s.textContent = `
+      .guest-auth-wrap {
+        position: fixed; inset: 0; z-index: 10000;
+        display: flex; align-items: center; justify-content: center; padding: 1rem;
+        opacity: 0; transition: opacity .2s ease;
+      }
+      .guest-auth-wrap--open { opacity: 1; }
+      .guest-auth-backdrop {
+        position: absolute; inset: 0;
+        background: rgba(0,0,0,.52); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+      }
+      .guest-auth-modal {
+        position: relative; background: var(--clr-surface, #fff);
+        border-radius: 20px; padding: 2rem 1.75rem 1.75rem;
+        max-width: 380px; width: 100%;
+        box-shadow: 0 24px 64px rgba(0,0,0,.22);
+        text-align: center;
+        transform: translateY(20px); transition: transform .28s cubic-bezier(.4,0,.2,1);
+      }
+      .guest-auth-wrap--open .guest-auth-modal { transform: translateY(0); }
+      .guest-auth-modal__icon { font-size: 2.4rem; margin-bottom: .65rem; line-height: 1; }
+      .guest-auth-modal__title {
+        font-size: 1.1rem; font-weight: 800; margin: 0 0 .6rem;
+        color: var(--clr-text-primary, #1a1a2e); line-height: 1.35;
+      }
+      .guest-auth-modal__product {
+        display: flex; align-items: center; gap: .6rem;
+        background: var(--clr-surface-2, #f4f6fb); border-radius: 12px;
+        padding: .6rem .8rem; margin: .7rem 0; text-align: start;
+      }
+      .guest-auth-modal__product-img {
+        width: 44px; height: 44px; border-radius: 8px;
+        object-fit: cover; flex-shrink: 0; border: 1px solid var(--clr-border, #e5e7eb);
+      }
+      .guest-auth-modal__product-name {
+        font-size: .82rem; font-weight: 600;
+        color: var(--clr-text-primary, #1a1a2e); line-height: 1.35;
+      }
+      .guest-auth-modal__desc {
+        font-size: .87rem; color: var(--clr-text-muted, #6b7280);
+        margin: 0 0 1.2rem; line-height: 1.55;
+      }
+      .guest-auth-modal__actions { display: flex; flex-direction: column; gap: .55rem; margin-bottom: .9rem; }
+      .guest-auth-modal__btn {
+        display: flex; align-items: center; justify-content: center; gap: .45rem;
+        padding: .78rem 1.25rem; border-radius: 100px;
+        font-size: .92rem; font-weight: 700; text-decoration: none;
+        transition: opacity .15s, transform .15s; border: none; cursor: pointer;
+      }
+      .guest-auth-modal__btn:hover { opacity: .88; transform: translateY(-1px); }
+      .guest-auth-modal__btn--primary { background: var(--clr-primary, #0f766e); color: #fff; }
+      .guest-auth-modal__btn--secondary {
+        background: var(--clr-surface-2, #f4f6fb); color: var(--clr-text-primary, #1a1a2e);
+        border: 1.5px solid var(--clr-border, #e5e7eb);
+      }
+      .guest-auth-modal__dismiss {
+        background: none; border: none; color: var(--clr-text-muted, #6b7280);
+        font-size: .82rem; cursor: pointer; padding: .25rem .5rem; border-radius: 6px;
+        font-family: inherit; transition: color .15s;
+      }
+      .guest-auth-modal__dismiss:hover { color: var(--clr-text-primary, #1a1a2e); }
+    `;
+    document.head.appendChild(s);
+  },
+
+  /* ── Resolve the base path for login/register links ── */
+  _authBase() {
+    /* App._layoutBase = 'pages/' when we're at site root (index.html),
+       '' when we're already inside the pages/ directory. */
+    return (App._layoutBase === 'pages/') ? 'pages/' : '';
+  },
+
+  /* ── Show the polished login-prompt modal ── */
+  showLoginPrompt(product) {
+    this._injectStyles();
+
+    /* Save intent before user navigates away */
+    if (product) {
+      this.savePendingAction({ type: 'add_to_cart', product });
+    }
+
+    const isAr  = App.lang === 'ar';
+    const base  = this._authBase();
+    const next  = encodeURIComponent(window.location.href);
+    const loginUrl    = base + 'login.html?next='    + next + '&reason=purchase';
+    const registerUrl = base + 'register.html?next=' + next + '&reason=purchase';
+
+    const productImg  = product && typeof getProductPlaceholderSvg === 'function'
+      ? getProductPlaceholderSvg(product) : '';
+    const productName = product
+      ? (product.title?.[App.lang] || product.title?.en || product.title || '') : '';
+
+    /* Remove any stale modal */
+    document.getElementById('guestAuthWrap')?.remove();
+
+    const wrap = document.createElement('div');
+    wrap.id        = 'guestAuthWrap';
+    wrap.className = 'guest-auth-wrap';
+    wrap.innerHTML = `
+      <div class="guest-auth-backdrop" id="guestAuthBackdrop"></div>
+      <div class="guest-auth-modal" role="dialog" aria-modal="true"
+           aria-label="${isAr ? 'تسجيل الدخول مطلوب' : 'Login required'}">
+        <div class="guest-auth-modal__icon">🛒</div>
+        <h2 class="guest-auth-modal__title">
+          ${isAr ? 'أنت على وشك إضافة منتج للسلة' : 'You\'re About to Add to Cart'}
+        </h2>
+        ${productName ? `
+        <div class="guest-auth-modal__product">
+          ${productImg ? `<img src="${productImg}" alt="" class="guest-auth-modal__product-img" loading="lazy">` : ''}
+          <span class="guest-auth-modal__product-name">${productName.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+        </div>` : ''}
+        <p class="guest-auth-modal__desc">
+          ${isAr
+            ? 'يرجى تسجيل الدخول أو إنشاء حساب جديد لإتمام عملية الشراء'
+            : 'Please sign in or create an account to complete your purchase'}
+        </p>
+        <div class="guest-auth-modal__actions">
+          <a href="${loginUrl}" class="guest-auth-modal__btn guest-auth-modal__btn--primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            ${isAr ? 'تسجيل الدخول' : 'Sign In'}
+          </a>
+          <a href="${registerUrl}" class="guest-auth-modal__btn guest-auth-modal__btn--secondary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+            ${isAr ? 'إنشاء حساب جديد' : 'Create Account'}
+          </a>
+        </div>
+        <button type="button" class="guest-auth-modal__dismiss" id="guestAuthDismiss">
+          ${isAr ? '← متابعة التسوق' : 'Continue Shopping →'}
+        </button>
+      </div>`;
+
+    document.body.appendChild(wrap);
+    document.body.style.overflow = 'hidden';
+
+    /* Animate in after one paint */
+    requestAnimationFrame(() => wrap.classList.add('guest-auth-wrap--open'));
+
+    /* Dismiss handlers */
+    const close = () => this.closeModal();
+    document.getElementById('guestAuthBackdrop')?.addEventListener('click', close);
+    document.getElementById('guestAuthDismiss')?.addEventListener('click',  close);
+    this._escFn = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', this._escFn);
+  },
+
+  closeModal() {
+    const wrap = document.getElementById('guestAuthWrap');
+    if (wrap) {
+      wrap.classList.remove('guest-auth-wrap--open');
+      setTimeout(() => wrap.remove(), 210);
+    }
+    document.body.style.overflow = '';
+    if (this._escFn) { document.removeEventListener('keydown', this._escFn); this._escFn = null; }
+  },
+};
+
+// ============================================================
+// PRICE RENDERER  — shared helper for all product card contexts
+// ============================================================
+/**
+ * Returns the HTML string for a product's price block.
+ * Handles both the on-sale (strikethrough + badge) and regular cases.
+ *
+ * @param {object} p   product object
+ * @param {string} sar SAR label (from App.t('product.sar'))
+ * @param {string} [wrapClass] extra class added to the outer wrapper
+ */
+function renderProductPrice(p, sar, wrapClass) {
+  const effectivePrice = p.salePrice ?? p.price ?? 0;
+  if (p.isOnSale && p.originalPrice && p.originalPrice > effectivePrice) {
+    /* Sale: sale price (teal bold) + original (gray strikethrough) — same line */
+    return `<div class="product-card__price product-card__price--sale ${wrapClass || ''}">
+      <span class="price-sale">${effectivePrice}<span class="price-unit"> ${sar}</span></span>
+      <span class="price-original">${p.originalPrice}<span class="price-unit"> ${sar}</span></span>
+    </div>`;
+  }
+  /* Regular price */
+  return `<div class="product-card__price ${wrapClass || ''}">
+    ${effectivePrice}<span class="product-card__price-unit"> ${sar}</span>
+  </div>`;
+}
 
 // ============================================================
 // TOAST
@@ -791,6 +1055,12 @@ const CartPanel = {
 
   /* Open the cart panel */
   open() {
+    /* Guests can't open the cart — show login prompt instead */
+    if (!GuestAuth.isLoggedIn()) {
+      GuestAuth.showLoginPrompt(null);
+      return;
+    }
+
     this._panel = document.getElementById('cartPanel');
     if (!this._panel) return;
 
@@ -906,11 +1176,19 @@ const CartPanel = {
     // Item rows — skip any item without a valid id (defensive guard)
     const validCart = cart.filter(i => i && typeof i.id === 'string' && i.id.trim() !== '');
     body.innerHTML = validCart.map((item, idx) => {
-      const name  = item.title?.[l] || item.title?.en || item.title || '';
-      const price = (item.price * item.qty).toFixed(0);
-      const img   = typeof getProductPlaceholderSvg === 'function'
-                    ? getProductPlaceholderSvg(item)
-                    : '';
+      const name      = item.title?.[l] || item.title?.en || item.title || '';
+      const unitPrice = item.salePrice ?? item.price ?? 0;
+      const price     = (unitPrice * item.qty).toFixed(0);
+      const img       = typeof getProductPlaceholderSvg === 'function'
+                        ? getProductPlaceholderSvg(item)
+                        : '';
+      /* Show strikethrough original total if item is on sale */
+      const isItemOnSale = item.isOnSale && item.originalPrice && item.originalPrice > unitPrice;
+      const origTotal    = isItemOnSale ? (Number(item.originalPrice) * item.qty).toFixed(0) : null;
+      const priceHtml    = isItemOnSale
+        ? `<s style="color:#9CA3AF;font-size:.8em;font-weight:400;margin-inline-end:4px">${origTotal} ${sar}</s>
+           <span style="color:#0EA5E9;font-weight:700">${price} ${sar}</span>`
+        : `${price} ${sar}`;
       return `
         <div class="cart-item" data-id="${item.id}" data-cartindex="${idx}">
           <img class="cart-item__img" src="${img}" alt="${name}" loading="lazy"/>
@@ -922,7 +1200,7 @@ const CartPanel = {
               <span class="cart-item__qty-num">${item.qty}</span>
               <button type="button" class="cart-item__qty-btn" data-action="inc" data-cartindex="${idx}" aria-label="${isAr ? 'زيادة' : 'Increase'}">+</button>
             </div>
-            <div class="cart-item__price">${price} ${sar}</div>
+            <div class="cart-item__price">${priceHtml}</div>
           </div>
           <button type="button" class="cart-item__remove" data-cartindex="${idx}" aria-label="${isAr ? 'حذف' : 'Remove'}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -971,8 +1249,8 @@ const CartPanel = {
       });
     });
 
-    // Totals
-    const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    // Totals — always charge salePrice (falls back to price for legacy items)
+    const subtotal = cart.reduce((s, i) => s + (i.salePrice ?? i.price ?? 0) * i.qty, 0);
     const shipping  = subtotal > 200 ? 0 : 25;
     const total     = subtotal + shipping;
 

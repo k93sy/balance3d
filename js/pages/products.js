@@ -26,7 +26,8 @@ const ProductsPage = {
 
   _maxStorePrice() {
     if (!PRODUCTS.length) return 500;
-    return Math.ceil(Math.max(...PRODUCTS.map(p => p.price)) / 50) * 50;
+    /* Use salePrice (effective price) for the slider range */
+    return Math.ceil(Math.max(...PRODUCTS.map(p => p.salePrice ?? p.price ?? 0)) / 50) * 50;
   },
 
   _syncPriceSlider() {
@@ -125,8 +126,8 @@ const ProductsPage = {
       list = list.filter(p => this.activeMaterials.some(m => matMap[m] === p.material));
     }
 
-    // Price
-    list = list.filter(p => p.price <= this.maxPrice);
+    // Price — filter by effective (sale) price
+    list = list.filter(p => (p.salePrice ?? p.price ?? 0) <= this.maxPrice);
 
     // Search (title EN+AR, category EN+AR, material)
     if (this.searchQuery) {
@@ -140,9 +141,9 @@ const ProductsPage = {
       );
     }
 
-    // Sort
-    if (this.sortMode === 'price-asc')  list.sort((a, b) => a.price  - b.price);
-    if (this.sortMode === 'price-desc') list.sort((a, b) => b.price  - a.price);
+    // Sort by effective price
+    if (this.sortMode === 'price-asc')  list.sort((a, b) => (a.salePrice??a.price??0) - (b.salePrice??b.price??0));
+    if (this.sortMode === 'price-desc') list.sort((a, b) => (b.salePrice??b.price??0) - (a.salePrice??a.price??0));
     if (this.sortMode === 'rating')     list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
     return list;
@@ -172,6 +173,8 @@ const ProductsPage = {
     }
     if (empty) empty.style.display = 'none';
 
+    const sar = App.t('product.sar');
+
     grid.innerHTML = list.map((p, i) => {
       const badgeMap = {
         popular:    `<span class="badge badge-accent">${App.t('product.popular')}</span>`,
@@ -180,20 +183,48 @@ const ProductsPage = {
         trending:   `<span class="badge badge-accent">${l === 'ar' ? 'رائج' : 'Trending'}</span>`,
         bestseller: `<span class="badge badge-warm">${l === 'ar' ? 'الأكثر مبيعاً' : 'Best Seller'}</span>`,
       };
-      const badge   = p.badge ? (badgeMap[p.badge] || '') : '';
       const imgSrc  = getProductPlaceholderSvg(p);
       const stars   = '★'.repeat(Math.min(5, Math.round(p.rating || 0)));
-      const inStock = p.inStock && p.status !== 'out_of_stock';
+      const stockQty = Number(p.stock) || 0;
+      const inStock  = p.inStock && p.status !== 'out_of_stock' && stockQty > 0;
 
-      const inStockEl = inStock
-        ? `<span class="badge badge-success" style="font-size:0.65rem">${l === 'ar' ? 'متوفر' : 'In Stock'}</span>`
-        : `<span class="badge" style="background:rgba(255,71,87,0.1);color:var(--clr-error);font-size:0.65rem">${l === 'ar' ? 'نفذ' : 'Out of Stock'}</span>`;
+      /* Discount chip — shown when isOnSale; replaces the badge pill on the image */
+      const saleChip = (() => {
+        if (!p.isOnSale || !p.originalPrice) return '';
+        const ep  = p.salePrice ?? p.price ?? 0;
+        const pct = Math.round(((p.originalPrice - ep) / p.originalPrice) * 100);
+        return `<div class="product-card__discount-chip">${l==='ar'?`خصم ${pct}%`:`${pct}% off`}</div>`;
+      })();
+
+      /* Badge pill — only shown when there is NO discount chip to avoid overlap */
+      const effectiveBadge = !saleChip ? p.badge : null;
+      const badge = effectiveBadge ? (badgeMap[effectiveBadge] || '') : '';
+
+      /* Stock badge: green ≥10, orange 1-9, red 0 */
+      const inStockEl = !inStock
+        ? `<span class="badge" style="background:rgba(239,68,68,.1);color:var(--clr-error,#ef4444);font-size:.62rem">${l==='ar'?'نفد المخزون':'Out of Stock'}</span>`
+        : stockQty < 10
+          ? `<span class="badge" style="background:rgba(245,158,11,.12);color:#d97706;font-size:.62rem">${l==='ar'?`تبقّى ${stockQty} فقط`:`Only ${stockQty} left`}</span>`
+          : `<span class="badge badge-success" style="font-size:.62rem">${l==='ar'?'متوفر ✓':'In Stock ✓'}</span>`;
+
+      /* Out-of-stock overlay on card image */
+      const oosOverlay = !inStock
+        ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;
+                       justify-content:center;border-radius:inherit;z-index:2">
+             <span style="color:#fff;font-size:.78rem;font-weight:700;background:rgba(239,68,68,.85);
+                          padding:.3rem .75rem;border-radius:100px;letter-spacing:.03em">
+               ${l==='ar'?'نفد المخزون':'Out of Stock'}
+             </span>
+           </div>`
+        : '';
 
       return `
-        <div class="card product-card reveal" style="transition-delay:${Math.min(i, 8) * 55}ms">
-          <div class="product-card__image">
+        <div class="card product-card reveal" style="transition-delay:${Math.min(i, 8) * 55}ms${!inStock?';opacity:.72;filter:grayscale(.25)':''}">
+          <div class="product-card__image" style="position:relative">
             <img src="${imgSrc}" alt="${(p.title?.[l] || '').replace(/"/g,'&quot;')}" loading="lazy"/>
             ${badge ? `<div class="product-card__badge">${badge}</div>` : ''}
+            ${saleChip}
+            ${oosOverlay}
           </div>
           <div class="product-card__body">
             <div style="display:flex;align-items:center;justify-content:space-between">
@@ -208,9 +239,7 @@ const ProductsPage = {
               <span style="font-size:var(--text-xs);color:var(--clr-text-muted)">• ${p.material || ''}</span>
             </div>
             <div class="product-card__footer">
-              <div class="product-card__price">
-                ${p.price} <span>${App.t('product.sar')}</span>
-              </div>
+              ${renderProductPrice(p, sar)}
               ${inStock
                 ? `<button class="btn btn-primary btn-sm" data-pid="${p.id}" onclick="App.addToCart(typeof ProductStore!=='undefined' ? ProductStore.getById(this.dataset.pid) : PRODUCTS.find(x=>x.id===this.dataset.pid))">
                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -268,9 +297,24 @@ const ProductsPage = {
     // Mobile sidebar toggle
     const toggle  = document.getElementById('filterToggle');
     const sidebar = document.getElementById('productsSidebar');
+    const sidebarClose = document.getElementById('sidebarClose');
+    const closeSidebar = () => sidebar.classList.remove('open');
     if (toggle && sidebar) {
       toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
     }
+    // Close sidebar via X button
+    if (sidebarClose) {
+      sidebarClose.addEventListener('click', closeSidebar);
+    }
+    // Close sidebar when clicking outside (on the backdrop)
+    document.addEventListener('click', (e) => {
+      if (sidebar && sidebar.classList.contains('open')) {
+        // If click is outside the sidebar and not on the toggle button
+        if (!sidebar.contains(e.target) && e.target !== toggle && !toggle?.contains(e.target)) {
+          closeSidebar();
+        }
+      }
+    });
   },
 };
 

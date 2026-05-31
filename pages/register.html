@@ -259,6 +259,17 @@
 
     if (!res.ok) { showBanner(res.error); return; }
 
+    /* Carry ?next= into the successBtn "Sign In" link so the full round-trip
+       completes: Product → add-to-cart → login prompt → Register → login → back. */
+    const nextParam = new URLSearchParams(window.location.search).get('next');
+    const reason    = new URLSearchParams(window.location.search).get('reason') || 'purchase';
+    if (nextParam) {
+      const successBtn = $('successBtn');
+      if (successBtn) {
+        successBtn.href = 'login.html?next=' + encodeURIComponent(nextParam) + '&reason=' + reason;
+      }
+    }
+
     $('registerForm').style.display = 'none';
     $('authSuccess').classList.add('show');
   });

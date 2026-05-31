@@ -589,3 +589,29 @@
 @media (max-width: 400px) {
   .products-grid { grid-template-columns: 1fr; }
 }
+
+/* ---- Extra mobile polish ---- */
+@media (max-width: 480px) {
+  /* Hero: don't force 100dvh on small phones — it's too tall */
+  .hero { min-height: calc(100dvh - 0px); }
+  .hero__inner {
+    padding-block: var(--space-12) var(--space-12);
+    gap: var(--space-8);
+  }
+  .hero__canvas-wrap { min-height: 220px; }
+  .hero__desc { font-size: var(--text-base); }
+  /* CTA: smaller padding */
+  .cta-inner { padding: var(--space-8) var(--space-5); }
+  /* Sections spacing */
+  .features-section    { padding-block: var(--space-16) var(--space-12); }
+  .products-section    { padding-block: var(--space-12) var(--space-16); }
+  .testimonials-section{ padding-block: var(--space-12) var(--space-16); }
+  .cta-section         { padding-block: var(--space-12) var(--space-16); }
+}
+
+@media (max-width: 374px) {
+  /* Stack CTA buttons vertically on tiny screens */
+  .hero__actions { flex-direction: column; width: 100%; }
+  .hero__actions .btn  { width: 100%; justify-content: center; }
+  .hero__stats { gap: var(--space-4); }
+}

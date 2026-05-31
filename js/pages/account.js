@@ -4,9 +4,10 @@
 'use strict';
 
 /* ── localStorage keys ── */
-const LS_ORDERS    = 'b3d_orders';
-const LS_ADDRESSES = 'b3d_addresses';
-const LS_NOTIF     = 'b3d_notif_prefs';
+const LS_ORDERS      = 'b3d_orders';
+const LS_ADDRESSES   = 'b3d_addresses';
+const LS_SAVED_CARDS = 'b3d_saved_cards';
+const LS_NOTIF       = 'b3d_notif_prefs';
 
 /* ── Bilingual text ── */
 const TX = {
@@ -17,7 +18,7 @@ const TX = {
     secSub:            'تغيير كلمة المرور والحفاظ على أمان حسابك',
     ordersHeading:     'طلباتي',
     ordersSub:         'عرض وتتبع جميع طلباتك',
-    addrHeading:       'عناواني المحفوظة',
+    addrHeading:       'عناويني المحفوظة',
     addrSub:           'إدارة عناوين التوصيل الخاصة بك',
     pmtHeading:        'طرق الدفع',
     pmtSub:            'طرق الدفع التي استخدمتها في طلباتك',
@@ -70,7 +71,7 @@ const TX = {
     navProfile:    'معلومات الحساب',
     navSecurity:   'كلمة المرور',
     navOrders:     'طلباتي',
-    navAddresses:  'عناواني',
+    navAddresses:  'عناويني',
     navPayments:   'طرق الدفع',
     navSettings:   'الإعدادات',
     navLogout:     'تسجيل الخروج',
@@ -134,6 +135,26 @@ const TX = {
     pmtStc:     'STC Pay',
     pmtApple:   'Apple Pay',
     pmtCash:    'الدفع عند الاستلام',
+
+    btnAddCard:      'إضافة بطاقة جديدة',
+    btnCardSave:     'حفظ البطاقة',
+    cardModalTitle:  'إضافة بطاقة جديدة',
+    lblCardNum:      'رقم البطاقة',
+    lblCardHolder:   'اسم حامل البطاقة',
+    lblCardExpiry:   'تاريخ الانتهاء',
+    lblCardCvv:      'رمز CVV',
+    lblCardDefault:  'جعل هذه البطاقة الافتراضية',
+    errCardNum:      'رقم بطاقة غير صالح',
+    errCardHolder:   'مطلوب',
+    errCardExpiry:   'تاريخ غير صالح (MM/YY)',
+    errCardCvv:      'رمز CVV غير صالح',
+    cardSavedOk:     'تم حفظ البطاقة بنجاح',
+    confirmDelCard:  'هل أنت متأكد من حذف هذه البطاقة؟',
+    defaultBadge:    'افتراضية',
+    btnSetCardDefault: 'تعيين كافتراضية',
+    savedCards:      'البطاقات المحفوظة',
+    orderHistory:    'سجل طرق الدفع',
+    btnConfirmYes:   'تأكيد',
 
     orderItems: n => n === 1 ? 'منتج واحد' : `${n} منتجات`,
     sar: 'ر.س',
@@ -263,6 +284,26 @@ const TX = {
     pmtApple:   'Apple Pay',
     pmtCash:    'Cash on Delivery',
 
+    btnAddCard:      'Add New Card',
+    btnCardSave:     'Save Card',
+    cardModalTitle:  'Add New Card',
+    lblCardNum:      'Card Number',
+    lblCardHolder:   'Cardholder Name',
+    lblCardExpiry:   'Expiry Date',
+    lblCardCvv:      'CVV Code',
+    lblCardDefault:  'Set as default card',
+    errCardNum:      'Invalid card number',
+    errCardHolder:   'Required',
+    errCardExpiry:   'Invalid date (MM/YY)',
+    errCardCvv:      'Invalid CVV',
+    cardSavedOk:     'Card saved successfully',
+    confirmDelCard:  'Are you sure you want to delete this card?',
+    defaultBadge:    'Default',
+    btnSetCardDefault: 'Set Default',
+    savedCards:      'Saved Cards',
+    orderHistory:    'Payment History',
+    btnConfirmYes:   'Confirm',
+
     orderItems: n => n === 1 ? '1 item' : `${n} items`,
     sar: 'SAR',
   },
@@ -318,6 +359,28 @@ const OrderStore = {
   },
 };
 
+/* ── Saved cards store ── */
+const CardStore = {
+  all() {
+    try { return JSON.parse(localStorage.getItem(LS_SAVED_CARDS) || '[]'); } catch { return []; }
+  },
+  save(list) {
+    localStorage.setItem(LS_SAVED_CARDS, JSON.stringify(list));
+  },
+  add(card) {
+    const list = this.all();
+    if (card.isDefault) list.forEach(c => c.isDefault = false);
+    list.push({ ...card, id: 'card-' + Date.now(), savedAt: new Date().toISOString() });
+    this.save(list);
+  },
+  remove(id) {
+    this.save(this.all().filter(c => c.id !== id));
+  },
+  setDefault(id) {
+    this.save(this.all().map(c => ({ ...c, isDefault: c.id === id })));
+  },
+};
+
 /* ── Main AccountPage object ── */
 const AccountPage = {
 
@@ -341,6 +404,7 @@ const AccountPage = {
     this._initProfileForm();
     this._initPasswordForm();
     this._initAddressModal();
+    this._initCardModal();
     this._initSettings();
     this._initLogout();
 
@@ -354,6 +418,18 @@ const AccountPage = {
     this._loadOrders();
     this._loadAddresses();
     this._loadPayments();
+
+    // Register as the current page so App.applyLang() re-renders us on language change
+    window.currentPage = {
+      render: () => {
+        _lang = (typeof App !== 'undefined' ? App.lang : null) ||
+                localStorage.getItem('b3d_lang') || _lang;
+        AccountPage._applyLang();
+        AccountPage._loadOrders();
+        AccountPage._loadAddresses();
+        AccountPage._loadPayments();
+      },
+    };
   },
 
   /* ── Apply all bilingual text to the page ── */
@@ -375,6 +451,9 @@ const AccountPage = {
       'errFirstName','errEmail','errCurrPass','errNewPass','errConfPass',
       'errAddrLabel','errAddrCity','errAddrStreet',
       'pmtInfoMsg',
+      // Card modal labels & errors
+      'lblCardNum','lblCardHolder','lblCardExpiry','lblCardCvv','lblCardDefault',
+      'errCardNum','errCardHolder','errCardExpiry','errCardCvv',
     ];
 
     ids.forEach(id => setText(id, t(id)));
@@ -391,6 +470,8 @@ const AccountPage = {
     setText('btnSavePass',    t('btnSavePass'));
     setText('btnAddAddress',  t('btnAddAddress'));
     setText('btnAddrSave',    t('btnAddrSave'));
+    setText('btnAddCard',     t('btnAddCard'));
+    setText('btnCardSave',    t('btnCardSave'));
     setText('btnDeleteAccount',t('btnDeleteAccount'));
     setText('shopNowBtn',     t('shopNow'));
     setText('emptyOrdersTitle',t('emptyOrdersTitle'));
@@ -658,15 +739,16 @@ const AccountPage = {
   },
 
   _orderCard(o) {
-    const status   = o.status || 'pending';
-    const pmtStatus = o.payment_status || '';
-    const date     = o.created_at ? new Date(o.created_at).toLocaleDateString(_lang === 'ar' ? 'ar-SA' : 'en-GB') : '—';
-    const amount   = typeof o.amount === 'number' ? o.amount.toFixed(2) : (o.amount || '—');
-    const items    = o.items || 1;
-    const name     = _lang === 'ar'
-      ? (o.customer_name_ar || o.customer_name_en || '')
-      : (o.customer_name_en || o.customer_name_ar || '');
+    /* ── tiny HTML escaper (avoids XSS from stored strings) ── */
+    const _e = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
+    const status    = o.status || 'pending';
+    const pmtStatus = o.payment_status || '';
+    const pmtMethod = o.payment_method || '';
+    const date      = o.created_at ? new Date(o.created_at).toLocaleDateString(_lang === 'ar' ? 'ar-SA' : 'en-GB') : '—';
+    const amount    = typeof o.amount === 'number' ? o.amount.toFixed(2) : (o.amount || '—');
+
+    /* ── Status badge ── */
     const statusMap = {
       pending:    { cls: 'pending',    label: t('statusPending') },
       processing: { cls: 'processing', label: t('statusProcessing') },
@@ -680,11 +762,121 @@ const AccountPage = {
       ? `<span class="order-status order-status--paid">${t('statusPaid')}</span>`
       : '';
 
+    /* ── Payment method label ── */
+    const pmtNames = {
+      credit_card: t('pmtCredit'),
+      mada:        t('pmtMada'),
+      stc_pay:     t('pmtStc'),
+      apple_pay:   t('pmtApple'),
+      cash:        t('pmtCash'),
+    };
+    const pmtLabel = pmtNames[pmtMethod] || '';
+
+    /* ── Items list ── */
+    const rawItems = Array.isArray(o.items) ? o.items : [];
+    let itemsHtml = '';
+    if (rawItems.length) {
+      const visible = rawItems.slice(0, 3);
+      const extra   = rawItems.length - visible.length;
+      itemsHtml = `<div class="order-card__items-list">
+        ${visible.map(item => {
+          const name  = _lang === 'ar'
+            ? (item.nameAr || item.name || item.nameEn || '')
+            : (item.nameEn || item.name || item.nameAr || '');
+          const qty   = item.qty || item.quantity || 1;
+          const price = typeof item.price === 'number' ? item.price
+                      : (typeof item.unitPrice === 'number' ? item.unitPrice : 0);
+          const img   = item.image || item.imageUrl || '';
+          const imgEl = img
+            ? `<img class="order-item-img" src="${_e(img)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+            : `<div class="order-item-img order-item-img--placeholder"></div>`;
+          return `<div class="order-item-row">
+            ${imgEl}
+            <div class="order-item-name">${_e(name)}</div>
+            <div class="order-item-qty">×${qty}</div>
+            <div class="order-item-price">${(price * qty).toFixed(0)} ${t('sar')}</div>
+          </div>`;
+        }).join('')}
+        ${extra > 0 ? `<div class="order-item-row order-item-more">${_lang === 'ar' ? `+${extra} منتجات أخرى` : `+${extra} more items`}</div>` : ''}
+      </div>`;
+    } else {
+      /* Fallback for legacy orders stored without items array */
+      const count = typeof o.items === 'number' ? o.items : 1;
+      itemsHtml = `<div class="order-card__body">
+        <div class="order-card__items">${t('orderItems')(count)}</div>
+        <div class="order-card__amount">${amount} ${t('sar')}</div>
+      </div>`;
+    }
+
+    /* ── Delivery address summary ── */
+    const da = o.delivery_address || null;
+    let addrLine = '';
+    if (da) {
+      addrLine = [da.street, da.district, da.city].filter(Boolean).join('، ');
+    } else if (o.address) {
+      addrLine = o.address;
+    }
+    const addrHtml = addrLine ? `
+      <div class="order-card__addr">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>${_e(addrLine)}</span>
+      </div>` : '';
+
+    /* ── 4-step tracking progress bar (hidden when cancelled) ── */
+    let trackHtml = '';
+    if (status !== 'cancelled') {
+      const steps = ['pending', 'processing', 'shipped', 'delivered'];
+      const stepLabels = {
+        pending:    t('statusPending'),
+        processing: t('statusProcessing'),
+        shipped:    t('statusShipped'),
+        delivered:  t('statusDelivered'),
+      };
+      const currentIdx = steps.indexOf(status);
+      trackHtml = `<div class="order-card__track">
+        <div class="order-track-steps">
+          ${steps.map((step, i) => {
+            const done    = i < currentIdx;
+            const current = i === currentIdx;
+            return `<div class="order-track-step${done ? ' done' : ''}${current ? ' active' : ''}">
+              <div class="order-track-dot"></div>
+              <div class="order-track-lbl">${stepLabels[step]}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+
+    /* ── Discount badge ── */
+    const discountBadge = o.discount_code
+      ? `<div class="order-card__discount">
+           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+             <polyline points="9 11 12 14 22 4"/>
+             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+           </svg>
+           <span class="order-discount-tag">${_e(o.discount_code)}</span>
+           <span style="color:#059669;font-size:.75rem;font-weight:600">
+             ${_lang === 'ar' ? 'وفّرت' : 'Saved'} ${(o.discount_amount || 0).toFixed(0)} ${t('sar')}
+           </span>
+         </div>`
+      : '';
+
+    /* ── Footer: payment method + total ── */
+    const footerHtml = rawItems.length ? `
+      <div class="order-card__footer">
+        ${pmtLabel ? `<div class="order-card__pmt">${_e(pmtLabel)}</div>` : ''}
+        <div class="order-card__total">${amount} ${t('sar')}</div>
+      </div>` : '';
+
     return `
       <div class="order-card">
         <div class="order-card__head">
           <div>
-            <div class="order-card__id">${o.id || '—'}</div>
+            <div class="order-card__id">${_e(o.id || '—')}</div>
             <div class="order-card__date">${date}</div>
           </div>
           <div style="display:flex;gap:var(--space-2);align-items:center">
@@ -692,10 +884,11 @@ const AccountPage = {
             ${pmtBadge}
           </div>
         </div>
-        <div class="order-card__body">
-          <div class="order-card__items">${t('orderItems')(items)}</div>
-          <div class="order-card__amount">${amount} ${t('sar')}</div>
-        </div>
+        ${itemsHtml}
+        ${addrHtml}
+        ${trackHtml}
+        ${discountBadge}
+        ${footerHtml}
       </div>`;
   },
 
@@ -843,21 +1036,70 @@ const AccountPage = {
     const body = $('paymentsBody');
     if (!body) return;
 
-    const email  = _user?.email;
-    const orders = OrderStore.forUser(email).filter(o => o.payment_method || o.payment_status === 'paid');
+    const savedCards = CardStore.all();
 
-    if (!orders.length) {
-      body.innerHTML = `
-        <div class="acc-empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          <div class="acc-empty__title">${t('emptyPmtTitle')}</div>
-          <div class="acc-empty__desc">${t('emptyPmtDesc')}</div>
+    /* ── Payment method icons ── */
+    const pmtIcons = {
+      credit_card: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 471" width="100%" height="100%" role="img" aria-label="Visa"><rect width="750" height="471" rx="40" fill="#1A1F71"/><text x="375" y="330" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-style="italic" font-size="260" fill="white" text-anchor="middle">VISA</text></svg>`,
+      mada:        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="100%" height="100%" role="img" aria-label="Mada"><rect width="52" height="24" rx="5" fill="#00847C"/><text x="26" y="12.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11" fill="white" letter-spacing="0.8">mada</text></svg>`,
+      stc_pay:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="100%" height="100%" role="img" aria-label="STC Pay"><rect width="74" height="28" rx="5" fill="#6A1F8E"/><text x="37" y="14.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="11" fill="white" letter-spacing="0.5">STC Pay</text></svg>`,
+      apple_pay:   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="100%" height="100%" role="img" aria-label="Apple Pay"><rect width="80" height="28" rx="5" fill="#000"/><path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/><path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/><text x="44" y="14.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="10" fill="white" letter-spacing="0.2">Apple Pay</text></svg>`,
+      cash:        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" role="img" aria-label="Cash on Delivery" fill="none" stroke="#00847C" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>`,
+    };
+
+    let html = '';
+
+    // ── Trash icon SVG (Heroicons outline) ──
+    const trashIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" width="15" height="15" aria-hidden="true">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/><path d="M14 11v6"/>
+      <path d="M9 6V4h6v2"/>
+    </svg>`;
+
+    // ── Saved cards section ──
+    if (savedCards.length) {
+      html += `<div class="pmt-section-title">${t('savedCards')}</div>
+        <div class="payment-method-list">
+          ${savedCards.map(card => {
+            const brandSvg = this._cardBrandSvg(card.brand);
+            const date = card.savedAt ? new Date(card.savedAt).toLocaleDateString(_lang === 'ar' ? 'ar-SA' : 'en-GB') : '';
+            return `
+              <div class="payment-method-card ${card.isDefault ? 'is-default' : ''}">
+                <div class="payment-method-card__icon">${brandSvg}</div>
+                <div class="payment-method-card__info">
+                  <div class="payment-method-card__name">
+                    ${card.brand === 'mada' ? t('pmtMada') : card.brand === 'mastercard' ? 'Mastercard' : t('pmtCredit')}
+                    ${card.isDefault ? `<span class="payment-method-card__badge">${t('defaultBadge')}</span>` : ''}
+                  </div>
+                  <div class="payment-method-card__detail" dir="ltr">&bull;&bull;&bull;&bull; ${card.last4}</div>
+                  ${card.expiry ? `<div class="payment-method-card__detail">${_lang === 'ar' ? 'تنتهي' : 'Expires'}: ${card.expiry}</div>` : ''}
+                </div>
+                <div class="payment-method-card__actions">
+                  ${!card.isDefault ? `<button class="acc-btn acc-btn--outline acc-btn--sm" data-card-default="${card.id}" type="button">${t('btnSetCardDefault')}</button>` : ''}
+                  <button class="pmt-del-btn" data-card-del="${card.id}"
+                          type="button" aria-label="${t('btnDelete')}">${trashIcon}</button>
+                </div>
+                <div class="pmt-confirm-bar" hidden
+                     data-card-id="${card.id}" data-was-default="${card.isDefault}">
+                  <span class="pmt-confirm-bar__msg">${t('confirmDelCard')}</span>
+                  <div class="pmt-confirm-bar__btns">
+                    <button class="acc-btn acc-btn--danger acc-btn--sm pmt-confirm-yes"
+                            type="button">${t('btnConfirmYes')}</button>
+                    <button class="acc-btn acc-btn--outline acc-btn--sm pmt-confirm-no"
+                            type="button">${t('cancel')}</button>
+                  </div>
+                </div>
+              </div>`;
+          }).join('')}
         </div>`;
-      return;
     }
 
-    // Deduplicate by payment method
-    const seen = new Set();
+    // ── Order payment history section ──
+    const email  = _user?.email;
+    const orders = OrderStore.forUser(email).filter(o => o.payment_method || o.payment_status === 'paid');
+    const seen   = new Set();
     const unique = orders.filter(o => {
       const key = o.payment_method || 'credit_card';
       if (seen.has(key)) return false;
@@ -865,42 +1107,190 @@ const AccountPage = {
       return true;
     });
 
-    /* ── Payment method icons ──────────────────────────────────────
-       All SVGs use width="100%" height="100%" so the parent container
-       controls the rendered size. The viewBox is preserved untouched,
-       and SVG's default preserveAspectRatio="xMidYMid meet" ensures
-       each logo scales uniformly — no stretching, no cropping.
-    ─────────────────────────────────────────────────────────────── */
-    const pmtIcons = {
-      credit_card: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 14" width="100%" height="100%" role="img" aria-label="Visa"><rect x="0.25" y="0.25" width="37.5" height="13.5" rx="2" fill="white" stroke="#d0d0d0" stroke-width="0.5"/><polygon points="0.5,1 2.5,1 5,13 7.5,1 9.5,1" fill="#1A1F71"/><rect x="11" y="1" width="2.5" height="12" fill="#1A1F71"/><rect x="15" y="1" width="8" height="1.8" rx="0.9" fill="#1A1F71"/><rect x="15" y="1" width="1.8" height="5.5" fill="#1A1F71"/><rect x="15" y="6" width="8" height="1.8" rx="0.9" fill="#1A1F71"/><rect x="21.2" y="7" width="1.8" height="5.5" fill="#1A1F71"/><rect x="15" y="11" width="8" height="1.8" rx="0.9" fill="#1A1F71"/><polygon points="25,13 27,13 31,1 29,1" fill="#1A1F71"/><polygon points="37.5,13 35.5,13 31,1 33,1" fill="#1A1F71"/><rect x="27" y="7.5" width="5" height="1.8" fill="#1A1F71"/></svg>`,
-      mada:        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="100%" height="100%" role="img" aria-label="Mada"><rect width="52" height="24" rx="5" fill="#00847C"/><text x="26" y="12.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11" fill="white" letter-spacing="0.8">mada</text></svg>`,
-      stc_pay:     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 28" width="100%" height="100%" role="img" aria-label="STC Pay"><rect width="74" height="28" rx="5" fill="#6A1F8E"/><text x="37" y="14.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="11" fill="white" letter-spacing="0.5">STC Pay</text></svg>`,
-      apple_pay:   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 28" width="100%" height="100%" role="img" aria-label="Apple Pay"><rect width="80" height="28" rx="5" fill="#000"/><path fill="white" d="M15.7 6.2 C16.4 5.3 16.3 4.3 16.3 4.3 C16.3 4.3 15.4 4.4 14.7 5 C14.1 5.5 13.7 6.3 13.9 6.9 C14.7 7 15.4 6.6 15.7 6.2 Z"/><path fill="white" d="M17.5 8.3 C16.5 8.3 15.7 9 15.1 9 C14.5 9 13.7 8.4 12.8 8.4 C11.6 8.4 10.5 9.1 9.9 10.2 C8.7 12.4 9.5 15.7 10.7 17.5 C11.3 18.4 12 19.3 12.9 19.3 C13.7 19.3 14 18.8 15 18.8 C16 18.8 16.3 19.3 17.1 19.3 C18 19.3 18.7 18.4 19.2 17.5 C19.6 16.9 19.8 16.4 20 15.7 C19.1 15.3 18.3 14.4 18.3 13.2 C18.3 12 19 11.1 20 10.5 C19.4 9.6 18.5 8.9 17.5 8.3 Z"/><text x="44" y="14.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="10" fill="white" letter-spacing="0.2">Apple Pay</text></svg>`,
-      cash:        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%" role="img" aria-label="Cash on Delivery" fill="none" stroke="#00847C" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>`,
-    };
-
-    const pmtNames = {
-      credit_card: t('pmtCredit'),
-      mada:        t('pmtMada'),
-      stc_pay:     t('pmtStc'),
-      apple_pay:   t('pmtApple'),
-      cash:        t('pmtCash'),
-    };
-
-    body.innerHTML = `<div class="payment-method-list">${unique.map(o => {
-      const method = o.payment_method || 'credit_card';
-      const icon   = pmtIcons[method] || pmtIcons.credit_card;
-      const name   = pmtNames[method] || t('pmtCredit');
-      const date   = o.created_at ? new Date(o.created_at).toLocaleDateString(_lang === 'ar' ? 'ar-SA' : 'en-GB') : '';
-      return `
-        <div class="payment-method-card">
-          <div class="payment-method-card__icon">${icon}</div>
-          <div class="payment-method-card__info">
-            <div class="payment-method-card__name">${name}</div>
-            ${date ? `<div class="payment-method-card__detail">${_lang === 'ar' ? 'آخر استخدام' : 'Last used'}: ${date}</div>` : ''}
-          </div>
+    if (unique.length) {
+      const pmtNames = {
+        credit_card: t('pmtCredit'),
+        mada:        t('pmtMada'),
+        stc_pay:     t('pmtStc'),
+        apple_pay:   t('pmtApple'),
+        cash:        t('pmtCash'),
+      };
+      html += `${savedCards.length ? `<div class="pmt-section-title pmt-list--spaced">${t('orderHistory')}</div>` : ''}
+        <div class="payment-method-list">
+          ${unique.map(o => {
+            const method = o.payment_method || 'credit_card';
+            const icon   = pmtIcons[method] || pmtIcons.credit_card;
+            const name   = pmtNames[method] || t('pmtCredit');
+            const date   = o.created_at ? new Date(o.created_at).toLocaleDateString(_lang === 'ar' ? 'ar-SA' : 'en-GB') : '';
+            return `
+              <div class="payment-method-card">
+                <div class="payment-method-card__icon">${icon}</div>
+                <div class="payment-method-card__info">
+                  <div class="payment-method-card__name">${name}</div>
+                  ${date ? `<div class="payment-method-card__detail">${_lang === 'ar' ? 'آخر استخدام' : 'Last used'}: ${date}</div>` : ''}
+                </div>
+              </div>`;
+          }).join('')}
         </div>`;
-    }).join('')}</div>`;
+    }
+
+    if (!html) {
+      html = `
+        <div class="acc-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <div class="acc-empty__title">${t('emptyPmtTitle')}</div>
+          <div class="acc-empty__desc">${t('emptyPmtDesc')}</div>
+        </div>`;
+    }
+
+    body.innerHTML = html;
+
+    // Wire card action buttons
+    body.querySelectorAll('[data-card-default]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        CardStore.setDefault(btn.dataset.cardDefault);
+        this._loadPayments();
+      });
+    });
+
+    // Trash button → reveal inline confirmation bar
+    body.querySelectorAll('[data-card-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bar = btn.closest('.payment-method-card')?.querySelector('.pmt-confirm-bar');
+        if (bar) bar.hidden = false;
+      });
+    });
+
+    // Confirm deletion: remove card, auto-promote default if needed, re-render
+    body.querySelectorAll('.pmt-confirm-yes').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bar = btn.closest('.pmt-confirm-bar');
+        const cardId    = bar?.dataset.cardId;
+        const wasDefault = bar?.dataset.wasDefault === 'true';
+        if (!cardId) return;
+        CardStore.remove(cardId);
+        if (wasDefault) {
+          const remaining = CardStore.all();
+          if (remaining.length > 0) CardStore.setDefault(remaining[0].id);
+        }
+        this._loadPayments();
+      });
+    });
+
+    // Cancel: hide the confirmation bar, no data change
+    body.querySelectorAll('.pmt-confirm-no').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bar = btn.closest('.pmt-confirm-bar');
+        if (bar) bar.hidden = true;
+      });
+    });
+  },
+
+  _detectCardBrand(num) {
+    const n = num.replace(/\s/g, '');
+    if (/^968/.test(n))                 return 'mada';
+    if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return 'mastercard';
+    if (/^4/.test(n))                   return 'visa';
+    return 'unknown';
+  },
+
+  _cardBrandSvg(brand) {
+    if (brand === 'mada') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 24" width="100%" height="100%" role="img" aria-label="Mada"><rect width="52" height="24" rx="5" fill="#00847C"/><text x="26" y="12.5" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="11" fill="white" letter-spacing="0.8">mada</text></svg>`;
+    }
+    if (brand === 'mastercard') {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 24" width="100%" height="100%" role="img" aria-label="Mastercard"><rect width="38" height="24" rx="4" fill="#252525"/><circle cx="15" cy="12" r="7" fill="#EB001B"/><circle cx="23" cy="12" r="7" fill="#F79E1B"/><path d="M19 6.8a7 7 0 0 1 0 10.4A7 7 0 0 1 19 6.8z" fill="#FF5F00"/></svg>`;
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 471" width="100%" height="100%" role="img" aria-label="Visa"><rect width="750" height="471" rx="40" fill="#1A1F71"/><text x="375" y="330" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-style="italic" font-size="260" fill="white" text-anchor="middle">VISA</text></svg>`;
+  },
+
+  /* ── Card modal ── */
+  _initCardModal() {
+    const modal     = $('cardModal');
+    if (!modal) return;
+    const addBtn    = $('addCardBtn');
+    const closeBtn  = $('cardModalClose');
+    const cancelBtn = $('cardModalCancel');
+    const saveBtn   = $('cardModalSave');
+    const numInp    = $('inpCardNum');
+    const alertBox  = $('paymentsAlert');
+
+    const openModal = () => {
+      $('cardForm')?.reset();
+      ['fieldCardNum','fieldCardHolder','fieldCardExpiry','fieldCardCvv'].forEach(id =>
+        $(id)?.classList.remove('has-error'));
+      if (numInp) numInp.value = '';
+      const preview = $('cardBrandPreview');
+      if (preview) preview.innerHTML = '';
+      modal.classList.add('open');
+      numInp?.focus();
+    };
+
+    const closeModal = () => modal.classList.remove('open');
+
+    addBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+
+    // Live card number formatting + brand preview
+    numInp?.addEventListener('input', () => {
+      const raw    = numInp.value.replace(/\D/g, '').slice(0, 16);
+      numInp.value = raw.replace(/(.{4})/g, '$1 ').trim();
+      const brand  = this._detectCardBrand(raw);
+      const preview = $('cardBrandPreview');
+      if (preview) preview.innerHTML = brand !== 'unknown' ? this._cardBrandSvg(brand) : '';
+    });
+
+    // Expiry auto-format: insert '/' after MM as user types
+    const expInp = $('inpCardExpiry');
+    expInp?.addEventListener('input', e => {
+      const isBackspace = e.inputType === 'deleteContentBackward';
+      let v = expInp.value.replace(/\D/g, '').slice(0, 4);
+      if (v.length >= 2 && !isBackspace) {
+        v = v.slice(0, 2) + '/' + v.slice(2);
+      }
+      expInp.value = v;
+    });
+
+    // Save
+    saveBtn?.addEventListener('click', () => {
+      const numF    = $('fieldCardNum');
+      const holderF = $('fieldCardHolder');
+      const expF    = $('fieldCardExpiry');
+      const cvvF    = $('fieldCardCvv');
+      [numF, holderF, expF, cvvF].forEach(f => f?.classList.remove('has-error'));
+
+      const rawNum  = ($('inpCardNum')?.value || '').replace(/\s/g, '');
+      const holder  = ($('inpCardHolder')?.value || '').trim();
+      const expiry  = ($('inpCardExpiry')?.value || '').trim();
+      const cvv     = ($('inpCardCvv')?.value || '').trim();
+      const isDefault = $('inpCardDefault')?.checked || false;
+
+      let valid = true;
+      if (rawNum.length < 13 || rawNum.length > 19 || !/^\d+$/.test(rawNum)) {
+        numF?.classList.add('has-error'); valid = false;
+      }
+      if (!holder) { holderF?.classList.add('has-error'); valid = false; }
+      if (!/^\d{2}\/\d{2}$/.test(expiry)) { expF?.classList.add('has-error'); valid = false; }
+      if (cvv.length < 3 || cvv.length > 4 || !/^\d+$/.test(cvv)) {
+        cvvF?.classList.add('has-error'); valid = false;
+      }
+      if (!valid) return;
+
+      CardStore.add({
+        brand:     this._detectCardBrand(rawNum),
+        last4:     rawNum.slice(-4),
+        expiry,
+        holder,
+        isDefault,
+      });
+
+      closeModal();
+      this._loadPayments();
+      if (alertBox) this._showAlert('paymentsAlert', 'success', t('cardSavedOk'));
+    });
   },
 
   /* ── Settings ── */
@@ -916,6 +1306,14 @@ const AccountPage = {
 
         if (typeof App !== 'undefined') {
           App.applyLang(lng, true);
+          // Sync local _lang and re-render the account page immediately —
+          // App.applyLang calls window.currentPage.render() but we also do it
+          // here explicitly so the Settings section itself updates in-place.
+          _lang = lng;
+          AccountPage._applyLang();
+          AccountPage._loadOrders();
+          AccountPage._loadAddresses();
+          AccountPage._loadPayments();
         } else {
           localStorage.setItem('b3d_lang', lng);
           window.location.reload();

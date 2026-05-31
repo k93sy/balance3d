@@ -373,10 +373,31 @@
   .nav__menu { display: none; }
   .nav__hamburger { display: flex; }
 }
-@media (max-width: 640px) {
+
+@media (max-width: 767px) {
   .nav__logo-tagline { display: none; }
   .nav__actions .btn-sm { display: none; }
   .nav__hamburger { display: flex; }
+  .nav__inner { gap: var(--space-2); padding-inline: var(--container-pad); }
+  /* Compact account button on mobile: show icon only */
+  .nav__account-btn .nav__account-label { display: none; }
+  .nav__account-btn { padding: 0.4rem 0.5rem; max-width: none; }
+  /* Slightly smaller cart icon touch area is already 38px — keep it */
+}
+
+@media (max-width: 374px) {
+  /* Absolute minimum: hide language toggle to save space */
+  .nav__actions .lang-toggle { display: none; }
+}
+
+/* ---- Drawer ---- */
+/* Drawer backdrop tap-to-close overlay (already handled by .overlay in HTML) */
+/* Ensure drawer links have 44px tap targets */
+@media (max-width: 1024px) {
+  .nav__drawer-link { min-height: 44px; }
+  .nav__cart { min-width: 44px; min-height: 44px; }
+  .nav__hamburger { min-width: 44px; min-height: 44px; }
+  .nav__drawer-close { min-width: 44px; min-height: 44px; }
 }
 
 /* ============================================================

@@ -49,7 +49,7 @@
 
         <button class="account-nav-item" data-section="addresses" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span id="navLabelAddresses">عناواني</span>
+          <span id="navLabelAddresses">عناويني</span>
         </button>
 
         <button class="account-nav-item" data-section="payments" type="button">
@@ -266,7 +266,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </div>
           <div>
-            <h1 class="account-page-header__title" id="addrHeading">عناواني المحفوظة</h1>
+            <h1 class="account-page-header__title" id="addrHeading">عناويني المحفوظة</h1>
             <p class="account-page-header__sub" id="addrSubheading">إدارة عناوين التوصيل الخاصة بك</p>
           </div>
         </div>
@@ -308,9 +308,16 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
               <span id="cardTitlePayments">وسائل الدفع</span>
             </div>
+            <button class="acc-btn acc-btn--primary acc-btn--sm" id="addCardBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span id="btnAddCard">إضافة بطاقة جديدة</span>
+            </button>
           </div>
-          <div class="account-card__body" id="paymentsBody">
-            <!-- rendered by JS -->
+          <div class="account-card__body">
+            <div id="paymentsAlert" style="display:none;margin-bottom:var(--space-4)"></div>
+            <div id="paymentsBody">
+              <!-- rendered by JS -->
+            </div>
           </div>
         </div>
 
@@ -468,6 +475,63 @@
       <button class="acc-btn acc-btn--primary" id="addrModalSave" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
         <span class="acc-btn-text" id="btnAddrSave">حفظ</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CARD MODAL ══ -->
+<div class="acc-modal-backdrop" id="cardModal" role="dialog" aria-modal="true" aria-labelledby="cardModalTitle">
+  <div class="acc-modal">
+    <div class="acc-modal__header">
+      <h2 class="acc-modal__title" id="cardModalTitle">إضافة بطاقة جديدة</h2>
+      <button class="acc-modal__close" id="cardModalClose" type="button" aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="acc-modal__body">
+      <form class="acc-form" id="cardForm" novalidate>
+        <div class="acc-field" id="fieldCardNum">
+          <div class="acc-card-field-header">
+            <label class="acc-label" for="inpCardNum"><span id="lblCardNum">رقم البطاقة</span> <span class="required">*</span></label>
+            <div class="acc-card-brand-preview" id="cardBrandPreview"></div>
+          </div>
+          <input class="acc-input" id="inpCardNum" type="text" inputmode="numeric" dir="ltr" maxlength="19" placeholder="0000 0000 0000 0000" autocomplete="cc-number" required/>
+          <span class="acc-error-msg" id="errCardNum">رقم بطاقة غير صالح</span>
+        </div>
+        <div class="acc-field" id="fieldCardHolder">
+          <label class="acc-label" for="inpCardHolder"><span id="lblCardHolder">اسم حامل البطاقة</span> <span class="required">*</span></label>
+          <input class="acc-input" id="inpCardHolder" type="text" dir="ltr" placeholder="FULL NAME" autocomplete="cc-name" required/>
+          <span class="acc-error-msg" id="errCardHolder">مطلوب</span>
+        </div>
+        <div class="acc-row">
+          <div class="acc-field" id="fieldCardExpiry">
+            <label class="acc-label" for="inpCardExpiry"><span id="lblCardExpiry">تاريخ الانتهاء</span> <span class="required">*</span></label>
+            <input class="acc-input" id="inpCardExpiry" type="text" dir="ltr" maxlength="5" placeholder="MM/YY" autocomplete="cc-exp" required/>
+            <span class="acc-error-msg" id="errCardExpiry">تاريخ غير صالح</span>
+          </div>
+          <div class="acc-field" id="fieldCardCvv">
+            <label class="acc-label" for="inpCardCvv"><span id="lblCardCvv">رمز CVV</span> <span class="required">*</span></label>
+            <input class="acc-input" id="inpCardCvv" type="password" dir="ltr" maxlength="4" placeholder="•••" autocomplete="cc-csc" required/>
+            <span class="acc-error-msg" id="errCardCvv">رمز غير صالح</span>
+          </div>
+        </div>
+        <div class="settings-row" style="padding-top:var(--space-2)">
+          <div class="settings-row__info">
+            <div class="settings-row__label" id="lblCardDefault">جعل هذه البطاقة الافتراضية</div>
+          </div>
+          <label class="acc-toggle">
+            <input type="checkbox" id="inpCardDefault"/>
+            <span class="acc-toggle__track"></span>
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="acc-modal__footer">
+      <button class="acc-btn acc-btn--outline" id="cardModalCancel" type="button">إلغاء</button>
+      <button class="acc-btn acc-btn--primary" id="cardModalSave" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="acc-btn-text" id="btnCardSave">حفظ البطاقة</span>
       </button>
     </div>
   </div>

@@ -329,3 +329,28 @@
   position: relative;
   font-size: var(--text-sm);
 }
+
+/* ---- Responsive ---- */
+@media (max-width: 767px) {
+  .contact-hero {
+    padding-top: calc(var(--nav-height) + var(--space-10));
+    padding-bottom: var(--space-10);
+  }
+  .contact-hero p { font-size: var(--text-base); }
+  .contact-section { padding-block: var(--space-12) var(--space-20); }
+  .contact-form-card { padding: var(--space-6); }
+  .contact-form-card__header { margin-bottom: var(--space-5); }
+  /* Inputs: prevent iOS zoom */
+  .contact-form-card input,
+  .contact-form-card textarea,
+  .contact-form-card select { font-size: 16px; }
+  /* Subject pills: smaller */
+  .subject-pill { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); min-height: 36px; }
+  .contact-map { padding-bottom: var(--space-16); }
+  .contact-map__placeholder { height: 240px; }
+}
+
+@media (max-width: 480px) {
+  .contact-form-card { padding: var(--space-5); border-radius: var(--radius-lg); }
+  .contact-info-card { padding: var(--space-4); }
+}

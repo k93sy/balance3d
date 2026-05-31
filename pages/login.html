@@ -43,6 +43,19 @@
       <p  class="auth-form-header__subtitle" id="formSubtitle"></p>
     </div>
 
+    <!-- Purchase-context banner (shown when redirected from add-to-cart / checkout) -->
+    <div id="purchaseBanner" style="display:none;align-items:center;gap:.6rem;
+         background:rgba(15,118,110,.08);border:1px solid rgba(15,118,110,.22);
+         border-radius:12px;padding:.65rem 1rem;margin-bottom:1rem;font-size:.87rem;
+         font-weight:600;color:#0f766e">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+      </svg>
+      <span id="purchaseBannerMsg"></span>
+    </div>
+
     <!-- Global error -->
     <div class="auth-error-banner" id="authError">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -305,6 +318,33 @@
     $('successTitle').textContent  = t('successTitle');
     $('successDesc').textContent   = t('successDesc');
     $('successBtn').textContent    = t('successBtn');
+
+    /* ── Purchase-context banner ─────────────────────────────────────────
+       When ?reason=purchase is in the URL (redirected from add-to-cart or
+       checkout), show a friendly "login to purchase" hint at the top.
+       Also update the "Register" link to carry ?next= so the round-trip
+       works: Product → add-to-cart → login → (or) register → login → back. */
+    const params    = new URLSearchParams(window.location.search);
+    const reason    = params.get('reason');
+    const nextParam = params.get('next');
+    const banner    = $('purchaseBanner');
+    const bannerMsg = $('purchaseBannerMsg');
+
+    if (reason === 'purchase' && banner && bannerMsg) {
+      bannerMsg.textContent = lang === 'ar'
+        ? 'سجّل دخولك لإتمام عملية الشراء'
+        : 'Sign in to complete your purchase';
+      banner.style.display = 'flex';
+    }
+
+    /* Update "Register" link in subtitle to carry ?next= so the round-trip completes */
+    if (nextParam) {
+      const regLink = $('formSubtitle')?.querySelector('a[href*="register"]');
+      if (regLink) {
+        const regBase = regLink.getAttribute('href').split('?')[0];
+        regLink.href  = regBase + '?next=' + encodeURIComponent(nextParam) + '&reason=' + (reason || 'purchase');
+      }
+    }
   }
 
   /* ---- Helpers ---- */

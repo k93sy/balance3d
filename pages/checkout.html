@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="../css/base.css"/>
   <link rel="stylesheet" href="../css/components.css"/>
   <link rel="stylesheet" href="../css/checkout.css"/>
+  <!-- Leaflet — free map library, no API key required (no SRI hash: unpkg may serve gzipped variants that won't match) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
 </head>
 <body>
 
@@ -87,6 +89,10 @@
           <div class="co-group">
             <label class="co-label" for="phone" id="lblPhone"></label>
             <input type="tel" id="phone" class="co-input" autocomplete="tel" inputmode="tel" placeholder="+966 5x xxx xxxx" dir="ltr"/>
+            <span class="co-error" id="phoneErr" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+              <span id="phoneErrMsg"></span>
+            </span>
           </div>
         </div>
       </div>
@@ -109,6 +115,22 @@
         <h2 class="checkout-section__title" id="titleShipping"></h2>
       </div>
       <div class="checkout-section__body">
+        <!-- Saved address cards injected here for logged-in users -->
+        <div id="savedAddrCards" style="display:none"></div>
+
+        <!-- Interactive delivery location map -->
+        <div class="co-map-wrap" id="coMapWrap">
+          <button type="button" class="co-btn-location" id="btnUseMyLocation">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/></svg>
+            <span id="lblUseMyLocation"></span>
+          </button>
+          <div id="coMap"></div>
+          <div class="co-map-hint">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="lblMapHint"></span>
+          </div>
+        </div>
+
         <div class="co-form" id="formShipping">
           <div class="co-group">
             <label class="co-label" for="city" id="lblCity"></label>
@@ -129,6 +151,16 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
               <span id="addressErrMsg"></span>
             </span>
+          </div>
+          <div class="co-row">
+            <div class="co-group">
+              <label class="co-label" for="buildingNumber" id="lblBuildingNum"></label>
+              <input type="text" id="buildingNumber" class="co-input" inputmode="numeric"/>
+            </div>
+            <div class="co-group">
+              <label class="co-label" for="postalCode" id="lblPostalCode"></label>
+              <input type="text" id="postalCode" class="co-input" inputmode="numeric" maxlength="5"/>
+            </div>
           </div>
           <div class="co-group">
             <label class="co-label" for="notes" id="lblNotes"></label>
@@ -219,6 +251,7 @@
       btnPay:       'المتابعة للدفع',
       errRequired:  'مطلوب',
       errEmail:     'بريد إلكتروني غير صالح',
+      errPhone:     'أدخل رقم جوال صحيح (مثال: 0512345678)',
       summary:      'ملخص الطلب',
       items:        'عنصر',
       subtotal:     'المجموع الفرعي',
@@ -232,12 +265,41 @@
       goShopping:   'تسوق الآن',
       successTitle: 'تم الطلب بنجاح! 🎉',
       successDesc:  'شكراً لطلبك. سيتم التواصل معك قريباً لتأكيد التفاصيل.',
+      codTitle:     'تم استلام طلبك بنجاح! 🎉',
+      codDesc:      'سيتم تأكيد طلبك خلال 24 ساعة. الدفع نقداً للمندوب عند الاستلام.',
+      codNote:      'الدفع عند الاستلام — لا تحتاج لأي بطاقة الآن.',
+      deliveryTime: 'وقت التوصيل المتوقع: 3–5 أيام عمل',
       failTitle:    'فشلت عملية الدفع',
       failDesc:     'لم تتم عملية الدفع. يمكنك المحاولة مرة أخرى.',
       orderId:      'رقم الطلب',
       backToShop:   'متابعة التسوق',
+      trackOrder:   'تتبع طلبي',
       retryPay:     'إعادة المحاولة',
-      cities:       ['الرياض','جدة','الدمام','مكة المكرمة','المدينة المنورة','الطائف','تبوك','أبها','الجبيل','الخبر'],
+      discountTitle:   'كود الخصم',
+      discountPh:      'أدخل كود الخصم',
+      discountApply:   'تطبيق',
+      discountSuccess: 'تم تطبيق كود الخصم بنجاح ✓',
+      discountRemove:  'إزالة',
+      discountInvalid: 'كود الخصم غير صحيح',
+      discountInactive:'كود الخصم غير فعال',
+      discountExpired: 'انتهت صلاحية كود الخصم',
+      discountUsed:    'تم استنفاد هذا الكود',
+      discountMin:     'الحد الأدنى للطلب لاستخدام هذا الكود:',
+      discount:        'الخصم',
+      lblBuildingNum:  'رقم المبنى (اختياري)',
+      lblPostalCode:   'الرمز البريدي (اختياري)',
+      savedAddresses:  'عناويني المحفوظة',
+      btnUseAddr:      'استخدم هذا العنوان',
+      btnNewAddr:      '+ إضافة عنوان جديد',
+      addrSummary:     'عنوان التوصيل',
+      changeAddr:      'تغيير',
+      courierMsg:      'سيتصل بك المندوب قبل التوصيل على الرقم:',
+      useMyLocation:   'استخدم موقعي الحالي',
+      mapHint:         'اسحب الدبوس أو انقر على الخريطة لتحديد موقعك بدقة',
+      mapFilling:      'جارٍ تحديد العنوان…',
+      mapGeoErr:       'تعذّر تحديد موقعك، حدّد الموقع يدويًا على الخريطة',
+      mapNoGeo:        'المتصفح لا يدعم تحديد الموقع',
+      cities:       ['الرياض','جدة','الدمام','مكة المكرمة','المدينة المنورة','الطائف','تبوك','أبها','الجبيل','الخبر','حائل','نجران','بريدة','ينبع','سكاكا','خميس مشيط','الباحة','عرعر','الجوف','جازان'],
     },
     en: {
       secure:       'Secure Checkout',
@@ -258,6 +320,7 @@
       btnPay:       'Proceed to Payment',
       errRequired:  'Required',
       errEmail:     'Invalid email address',
+      errPhone:     'Enter a valid phone number (e.g. 0512345678)',
       summary:      'Order Summary',
       items:        'item(s)',
       subtotal:     'Subtotal',
@@ -271,12 +334,41 @@
       goShopping:   'Shop Now',
       successTitle: 'Order Placed Successfully! 🎉',
       successDesc:  'Thank you for your order. We will contact you shortly to confirm the details.',
+      codTitle:     'Your Order Has Been Received! 🎉',
+      codDesc:      'Your order will be confirmed within 24 hours. Pay cash to the courier upon delivery.',
+      codNote:      'Cash on Delivery — no card needed.',
+      deliveryTime: 'Estimated delivery: 3–5 business days',
       failTitle:    'Payment Failed',
       failDesc:     'Your payment could not be processed. Please try again.',
       orderId:      'Order ID',
       backToShop:   'Continue Shopping',
+      trackOrder:   'Track My Order',
       retryPay:     'Retry Payment',
-      cities:       ['Riyadh','Jeddah','Dammam','Makkah','Madinah','Taif','Tabuk','Abha','Jubail','Khobar'],
+      discountTitle:   'Discount Code',
+      discountPh:      'Enter discount code',
+      discountApply:   'Apply',
+      discountSuccess: 'Discount applied successfully ✓',
+      discountRemove:  'Remove',
+      discountInvalid: 'Invalid discount code',
+      discountInactive:'Discount code is not active',
+      discountExpired: 'Discount code has expired',
+      discountUsed:    'Discount code has been exhausted',
+      discountMin:     'Minimum order for this code:',
+      discount:        'Discount',
+      lblBuildingNum:  'Building No. (optional)',
+      lblPostalCode:   'Postal Code (optional)',
+      savedAddresses:  'Saved Addresses',
+      btnUseAddr:      'Use This Address',
+      btnNewAddr:      '+ Add New Address',
+      addrSummary:     'Delivery Address',
+      changeAddr:      'Change',
+      courierMsg:      'Our courier will call you before delivery on:',
+      useMyLocation:   'Use My Current Location',
+      mapHint:         'Drag the pin or click the map to set your exact delivery location',
+      mapFilling:      'Detecting address…',
+      mapGeoErr:       'Could not detect your location. Please pin it manually on the map.',
+      mapNoGeo:        'Your browser does not support geolocation',
+      cities:       ['Riyadh','Jeddah','Dammam','Makkah','Madinah','Taif','Tabuk','Abha','Jubail','Khobar','Hail','Najran','Buraidah','Yanbu','Sakakah','Khamis Mushait','Al-Baha','Arar','Al-Jouf','Jazan'],
     },
   };
 
@@ -288,30 +380,106 @@
   document.documentElement.lang = lang === 'ar' ? 'ar' : 'en';
   document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
 
+  /* ---- Escape helper (local — no global esc in checkout) ---- */
+  const _esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
   /* ---- State ---- */
-  let currentStep = 1;
-  let orderData   = {};
-  let cart        = [];
-  let orderId     = null;
+  let currentStep     = 1;
+  let orderData       = {};
+  let cart            = [];
+  let orderId         = null;
+  let appliedDiscount = null;   // { code, type, value, amount } — set by applyDiscountCode()
 
   /* ---- Load cart ---- */
   function loadCart() {
     try { cart = JSON.parse(localStorage.getItem('b3d_cart') || '[]'); } catch (_) { cart = []; }
   }
 
-  /* ---- Calc totals ---- */
+  /* ---- Discount helpers ---- */
+  function _getDiscounts() {
+    try { return JSON.parse(localStorage.getItem('b3d_admin_discounts') || '[]'); } catch { return []; }
+  }
+
+  function _incrementDiscountUsage(code) {
+    try {
+      const list = _getDiscounts();
+      const idx  = list.findIndex(d => d.code === code);
+      if (idx >= 0) {
+        list[idx].usageCount = (list[idx].usageCount || 0) + 1;
+        localStorage.setItem('b3d_admin_discounts', JSON.stringify(list));
+      }
+    } catch (e) { console.warn('[Discount] Failed to increment usage:', e); }
+  }
+
+  function calculateDiscount(discount, subtotal) {
+    const type = discount.type;
+    if (type === 'percentage' || type === 'percent') {
+      return Math.round(((subtotal * discount.value) / 100) * 100) / 100;
+    } else if (type === 'fixed') {
+      return Math.min(discount.value, subtotal);
+    }
+    return 0;
+  }
+
+  function showDiscountError(msg) {
+    const el = $('discountError');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  async function applyDiscountCode(code) {
+    const normalizedCode = (code || '').trim().toUpperCase();
+
+    // Hide previous error
+    const errEl = $('discountError');
+    if (errEl) errEl.style.display = 'none';
+
+    if (!normalizedCode) {
+      showDiscountError(t('discountInvalid'));
+      return;
+    }
+
+    // Show loading state on button
+    const applyBtn = $('discountApplyBtn');
+    if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = '…'; }
+
+    const discounts = _getDiscounts();
+    const discount  = discounts.find(d => d.code === normalizedCode) || null;
+
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = t('discountApply'); }
+
+    if (!discount) { showDiscountError(t('discountInvalid')); return; }
+    if (discount.status && discount.status !== 'active') { showDiscountError(t('discountInactive')); return; }
+    if (discount.expiry && new Date(discount.expiry) < new Date()) { showDiscountError(t('discountExpired')); return; }
+    if (discount.usageLimit && (discount.usageCount || 0) >= discount.usageLimit) { showDiscountError(t('discountUsed')); return; }
+
+    const rawSubtotal = cart.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+    if (discount.minOrder && rawSubtotal < discount.minOrder) {
+      showDiscountError(t('discountMin') + ' ' + discount.minOrder + ' ' + t('sar'));
+      return;
+    }
+
+    const discountAmount = calculateDiscount(discount, rawSubtotal);
+    appliedDiscount = { ...discount, amount: discountAmount };
+    renderSummary();
+  }
+
+  /* ---- Calc totals (factors in applied discount) ---- */
   function calcTotals() {
-    const subtotal = cart.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
-    const shipping = subtotal >= 200 ? 0 : 25;
-    return { subtotal, shipping, total: subtotal + shipping };
+    const subtotal       = cart.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+    const discountAmount = appliedDiscount ? calculateDiscount(appliedDiscount, subtotal) : 0;
+    const afterDiscount  = Math.max(0, subtotal - discountAmount);
+    const shipping       = afterDiscount >= 200 ? 0 : 25;
+    return { subtotal, discountAmount, shipping, total: afterDiscount + shipping };
   }
 
   /* ---- Render order summary sidebar ---- */
   function renderSummary() {
     const el = $('orderSummary');
     if (!el) return;
-    const { subtotal, shipping, total } = calcTotals();
-    const sar = t('sar');
+    const { subtotal, discountAmount, shipping, total } = calcTotals();
+    const sar   = t('sar');
     const count = cart.reduce((s, i) => s + (i.qty || 1), 0);
 
     const itemsHtml = cart.map(item => {
@@ -337,17 +505,65 @@
          </div>`
       : '';
 
+    /* ── Discount UI: either input field or applied-code display ── */
+    const discountSectionHtml = appliedDiscount
+      ? `<div class="co-discount-section co-discount-section--applied">
+           <div class="co-discount-section__label">${t('discountTitle')}</div>
+           <div class="co-discount-applied-row">
+             <span class="co-discount-code-tag">${_esc(appliedDiscount.code)}</span>
+             <button type="button" id="discountRemoveBtn" class="co-discount-remove">
+               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+               ${_esc(t('discountRemove'))}
+             </button>
+           </div>
+           <div class="co-discount-msg co-discount-msg--success">${t('discountSuccess')}</div>
+         </div>`
+      : `<div class="co-discount-section">
+           <div class="co-discount-section__label">${t('discountTitle')}</div>
+           <div class="co-discount-field">
+             <input type="text" id="discountInput" class="co-discount-input"
+                    placeholder="${_esc(t('discountPh'))}"
+                    style="text-transform:uppercase" maxlength="30"
+                    autocomplete="off" spellcheck="false"/>
+             <button type="button" id="discountApplyBtn" class="co-discount-btn">${t('discountApply')}</button>
+           </div>
+           <div class="co-discount-msg co-discount-msg--error" id="discountError" style="display:none"></div>
+         </div>`;
+
+    /* ── Discount row shown between subtotal and shipping ── */
+    const discountRowHtml = discountAmount > 0
+      ? `<div class="co-total-row co-total-row--discount">
+           <span>${t('discount')} <span class="co-discount-code-inline">${_esc(appliedDiscount.code)}</span></span>
+           <span class="co-total-discount-val">- ${discountAmount.toFixed(0)} ${sar}</span>
+         </div>`
+      : '';
+
+    /* ── Address summary — shown once the user has filled step 2 ── */
+    const addrSummaryHtml = orderData.cityEn ? `
+      <div class="co-summary-address">
+        <div class="co-summary-address__hdr">
+          <span>${t('addrSummary')}</span>
+          <button type="button" class="co-summary-address__change" id="btnChangeAddr">${t('changeAddr')}</button>
+        </div>
+        <div class="co-summary-address__txt">
+          ${_esc([orderData.deliveryAddress?.street, orderData.deliveryAddress?.district, orderData.cityEn].filter(Boolean).join('، '))}
+        </div>
+      </div>` : '';
+
     el.innerHTML = `
       <div class="co-summary-header">
         <span class="co-summary-title">${t('summary')}</span>
         <span class="co-summary-count">${count} ${t('items')}</span>
       </div>
       <div class="co-summary-items">${itemsHtml}</div>
+      ${addrSummaryHtml}
+      ${discountSectionHtml}
       <div class="co-summary-totals">
         <div class="co-total-row">
           <span>${t('subtotal')}</span>
           <span>${subtotal.toFixed(0)} ${sar}</span>
         </div>
+        ${discountRowHtml}
         <div class="co-total-row">
           <span>${t('shipping')}</span>
           <span>${shipping === 0 ? t('shippingFree') : shipping + ' ' + sar}</span>
@@ -358,6 +574,21 @@
           <span>${total.toFixed(0)} ${sar}</span>
         </div>
       </div>`;
+
+    /* ── Wire change-address button ── */
+    $('btnChangeAddr')?.addEventListener('click', () => showStep(2));
+
+    /* ── Wire discount buttons after every re-render ── */
+    $('discountApplyBtn')?.addEventListener('click', () => {
+      applyDiscountCode($('discountInput')?.value || '');
+    });
+    $('discountInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') applyDiscountCode($('discountInput')?.value || '');
+    });
+    $('discountRemoveBtn')?.addEventListener('click', () => {
+      appliedDiscount = null;
+      renderSummary();
+    });
   }
 
   /* ---- Render steps indicator ---- */
@@ -388,6 +619,12 @@
     });
     renderSteps();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    /* Lazy-init the Leaflet map the first time Step 2 (Shipping) becomes visible.
+       The slideUp animation is 250 ms — wait until it finishes before measuring
+       the container, otherwise Leaflet gets height:0 and tiles never load. */
+    if (n === 2 && typeof window.initCheckoutMap === 'function') {
+      setTimeout(window.initCheckoutMap, 300);
+    }
   }
 
   /* ---- Field validation helpers ---- */
@@ -409,19 +646,29 @@
     set('lblLastName',  t('lblLastName'));
     set('lblEmail',      t('lblEmail'));
     set('lblPhone',      t('lblPhone'));
-    set('lblCity',       t('lblCity'));
-    set('lblDistrict',   t('lblDistrict'));
-    set('lblAddress',    t('lblAddress'));
-    set('lblNotes',      t('lblNotes'));
-    set('lblContactNext',t('btnNext'));
-    set('lblBack',       t('btnBack'));
-    set('lblShipNext',   t('btnPay'));
-    set('lblPayBack',    t('btnBack'));
+    set('lblCity',        t('lblCity'));
+    set('lblDistrict',    t('lblDistrict'));
+    set('lblAddress',     t('lblAddress'));
+    set('lblBuildingNum', t('lblBuildingNum'));
+    set('lblPostalCode',  t('lblPostalCode'));
+    set('lblNotes',          t('lblNotes'));
+    set('lblUseMyLocation',  t('useMyLocation'));
+    set('lblMapHint',        t('mapHint'));
+    set('lblContactNext', t('btnNext'));
+    set('lblBack',        t('btnBack'));
+    set('lblShipNext',    t('btnPay'));
+    set('lblPayBack',     t('btnBack'));
 
-    // Populate city select
+    // Populate city select — bilingual pairs so value is always the AR name
+    // (stored as city name; admin sees it correctly in either UI language)
     const cityEl = $('city');
     if (cityEl) {
-      cityEl.innerHTML = t('cities').map(c => `<option value="${c}">${c}</option>`).join('');
+      const arCities = TX.ar.cities;
+      const enCities = TX.en.cities;
+      cityEl.innerHTML = arCities.map((ar, i) => {
+        const display = isAr() ? ar : (enCities[i] || ar);
+        return `<option value="${ar}">${display}</option>`;
+      }).join('');
     }
   }
 
@@ -430,6 +677,7 @@
     const firstName = $('firstName').value.trim();
     const lastName  = $('lastName').value.trim();
     const email     = $('email').value.trim();
+    const phone     = $('phone').value.trim();
     let valid = true;
 
     if (!firstName) {
@@ -450,6 +698,18 @@
     } else {
       hideErr('emailErr'); $('email').classList.remove('error');
     }
+    /* Phone: required, accept formats like 05xxxxxxxx or +9665xxxxxxxx */
+    const phoneClean = phone.replace(/[\s\-().]/g, '');
+    const phoneValid = phoneClean.length >= 9 && /^(\+?966|0)?5\d{8}$/.test(phoneClean);
+    if (!phone) {
+      showErr('phoneErr', 'phoneErrMsg', t('errRequired'));
+      $('phone').classList.add('error'); valid = false;
+    } else if (!phoneValid) {
+      showErr('phoneErr', 'phoneErrMsg', t('errPhone'));
+      $('phone').classList.add('error'); valid = false;
+    } else {
+      hideErr('phoneErr'); $('phone').classList.remove('error');
+    }
     if (!valid) return;
 
     orderData.firstName = firstName;
@@ -457,7 +717,7 @@
     orderData.nameEn    = firstName + (lastName ? ' ' + lastName : '');
     orderData.nameAr    = firstName + (lastName ? ' ' + lastName : '');
     orderData.email     = email;
-    orderData.phone     = $('phone').value.trim();
+    orderData.phone     = phone;
     showStep(2);
   });
 
@@ -480,17 +740,110 @@
 
     if (!valid) return;
 
-    const cityEl  = $('city');
-    orderData.cityEn  = cityEl?.value || '';
-    orderData.cityAr  = cityEl?.value || '';
-    orderData.district= district;
-    orderData.address = address + (district ? ', ' + district : '');
-    orderData.notes   = $('notes').value.trim();
-    orderData.items   = cart;
-    orderData.total   = calcTotals().total;
+    const cityEl        = $('city');
+    const cityVal       = cityEl?.value || '';
+    const buildingNumber = $('buildingNumber')?.value.trim() || '';
+    const postalCode     = $('postalCode')?.value.trim() || '';
+    const notes          = $('notes').value.trim();
+    orderData.cityEn     = cityVal;
+    orderData.cityAr     = cityVal;
+    orderData.district   = district;
+    orderData.address    = [address, district, cityVal].filter(Boolean).join('، ');
+    orderData.notes      = notes;
+    /* ── Attach map coordinates if the customer pinned a location ── */
+    const _mc = window._checkoutMap?.coords;
+    const _hasCoords = _mc && (_mc.lat !== 24.7136 || _mc.lng !== 46.6753 || window._checkoutMap?.moved);
+    orderData.deliveryAddress = {
+      fullName:      orderData.nameEn || '',
+      phone:         orderData.phone  || '',
+      city:          cityVal,
+      district,
+      street:        address,
+      buildingNumber,
+      postalCode,
+      notes,
+      coordinates: _hasCoords
+        ? { latitude: _mc.lat, longitude: _mc.lng }
+        : null,
+      mapLink: _hasCoords
+        ? `https://www.openstreetmap.org/?mlat=${_mc.lat}&mlon=${_mc.lng}`
+        : null,
+    };
+    const { subtotal: _coSub, discountAmount: _coDisc, shipping: _coShip, total: _coTotal } = calcTotals();
+    orderData.items = cart;
+    orderData.total = _coTotal;
+    // Attach discount fields so payment.js stores them in the order record
+    if (appliedDiscount && _coDisc > 0) {
+      const _rawShip = _coSub >= 200 ? 0 : 25;  // shipping before discount
+      orderData.discountCode        = appliedDiscount.code;
+      orderData.discountAmount      = _coDisc;
+      orderData.totalBeforeDiscount = _coSub + _rawShip;
+      orderData.totalAfterDiscount  = _coTotal;
+    } else {
+      delete orderData.discountCode;
+      delete orderData.discountAmount;
+      delete orderData.totalBeforeDiscount;
+      delete orderData.totalAfterDiscount;
+    }
 
     const btn = $('btnShipNext');
     btn.classList.add('loading'); btn.disabled = true;
+
+    /* ── Stock validation — check every cart item before creating the order ── */
+    try {
+      const _prods     = JSON.parse(localStorage.getItem('b3d_products') || '[]');
+      const _stockErrs = [];
+      for (const item of cart) {
+        const pid      = item.id || item.productId;
+        const qty      = Number(item.qty || item.quantity || 1);
+        const prod     = _prods.find(p => p.id === pid);
+        const avail    = Number(prod?.stock) || 0;
+        const itemName = (isAr()
+          ? (item.title?.ar || item.title?.en || item.title || '')
+          : (item.title?.en || item.title?.ar || item.title || ''));
+
+        if (!prod || prod.status === 'out_of_stock' || avail === 0) {
+          _stockErrs.push(isAr()
+            ? `"${itemName}" نفد من المخزون`
+            : `"${itemName}" is out of stock`);
+        } else if (avail < qty) {
+          _stockErrs.push(isAr()
+            ? `"${itemName}" — المتاح: ${avail} فقط (طلبت ${qty})`
+            : `"${itemName}" — only ${avail} in stock (you ordered ${qty})`);
+        }
+      }
+      if (_stockErrs.length) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        _stockErrs.forEach(msg => {
+          if (typeof Toast !== 'undefined') Toast.show(msg, 'error');
+        });
+        if (typeof Toast === 'undefined') alert(_stockErrs.join('\n'));
+        return;
+      }
+    } catch (_stockEx) {
+      console.warn('[Checkout] Stock check error (non-fatal):', _stockEx);
+    }
+
+    /* ── Guard: reject order if logged-in user is blocked or deleted ── */
+    /* AuthService.getUser() returns null (and clears the session) when the
+       account is blocked/deleted — catch that here before creating the order. */
+    try {
+      if (typeof AuthService !== 'undefined') {
+        const currentUser = await AuthService.getUser();
+        if (currentUser && currentUser.status === 'blocked') {
+          btn.classList.remove('loading'); btn.disabled = false;
+          if (typeof Toast !== 'undefined') {
+            Toast.show(
+              isAr()
+                ? 'تم تعليق حسابك. يرجى التواصل مع الدعم.'
+                : 'Your account has been suspended. Please contact support.',
+              'error'
+            );
+          }
+          return;
+        }
+      }
+    } catch (_) { /* non-fatal — proceed as guest */ }
 
     const result = await PaymentService.createOrder(orderData);
 
@@ -502,6 +855,12 @@
     }
 
     orderId = result.orderId;
+
+    // Increment discount usage now that the order is confirmed
+    if (appliedDiscount) {
+      _incrementDiscountUsage(appliedDiscount.code);
+    }
+
     showStep(3);
     renderPaymentForm(orderId, orderData.total);
   });
@@ -523,27 +882,135 @@
     $('checkoutSteps').style.display = 'none';
     $('confirmView').style.display   = 'block';
 
-    const paid = status === 'paid';
-    const sar  = t('sar');
+    const isCod  = status === 'cod';
+    const paid   = status === 'paid';
+    const success = paid || isCod;      // both are a successful order placement
+
+    /* ── Icon ── */
+    const iconHtml = success
+      ? '<polyline points="20 6 9 17 4 12"/>'
+      : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+
+    /* ── Title / description ── */
+    const title = isCod ? t('codTitle') : paid ? t('successTitle') : t('failTitle');
+    const desc  = isCod ? t('codDesc')  : paid ? t('successDesc')  : t('failDesc');
+
+    /* ── Delivery address block (read from orderData or pending order) ── */
+    let addrObj = orderData.deliveryAddress || null;
+    if (!addrObj) {
+      try {
+        const _p = JSON.parse(localStorage.getItem('b3d_pending_order') || 'null');
+        if (_p?.deliveryAddress) addrObj = _p.deliveryAddress;
+        else if (_p?.address) addrObj = { street: _p.address, city: _p.city_ar || _p.city_en || '', phone: _p.customer_phone || '' };
+      } catch {}
+    }
+    const addrLine = addrObj ? [addrObj.street, addrObj.district, addrObj.city].filter(Boolean).join('، ') : '';
+    const addrDisplayHtml = addrLine ? `
+      <div class="checkout-confirm__address">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <div>${_esc(addrLine)}</div>
+      </div>` : '';
+
+    /* ── COD-specific note (payment method badge) ── */
+    const courierPhone = addrObj?.phone || orderData.phone || '';
+    const codNoteHtml = isCod ? `
+      <div style="
+        display:inline-flex;align-items:center;gap:.5rem;
+        margin:.75rem 0 0;
+        padding:.5rem 1rem;
+        background:rgba(5,150,105,.08);
+        border:1px solid rgba(5,150,105,.22);
+        border-radius:100px;
+        font-size:.8rem;color:#059669;font-weight:600
+      ">
+        <svg width="14" height="14" viewBox="0 0 44 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="8" width="24" height="12" rx="2" stroke="#059669" stroke-width="1.7"/>
+          <circle cx="15" cy="14" r="3.2" stroke="#059669" stroke-width="1.7"/>
+          <line x1="30" y1="10" x2="41" y2="10" stroke="#059669" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="30" y1="14" x2="41" y2="14" stroke="#059669" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="30" y1="18" x2="38" y2="18" stroke="#059669" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        ${t('codNote')}
+      </div>
+      ${courierPhone ? `<div class="checkout-confirm__courier">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.48 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.59a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/>
+        </svg>
+        ${t('courierMsg')} <strong dir="ltr">${_esc(courierPhone)}</strong>
+      </div>` : ''}
+      <div style="font-size:.78rem;color:var(--clr-text-muted,#787898);margin-top:.5rem">
+        ${t('deliveryTime')}
+      </div>` : '';
+
+    /* ── Order ID ── */
+    const orderIdHtml = oid
+      ? `<div class="checkout-confirm__order-id">${t('orderId')}: <strong>${oid}</strong></div>`
+      : '';
+
+    /* ── Discount used (show when order succeeded) ── */
+    let discountInfoHtml = '';
+    if (success) {
+      let dCode = null, dAmt = 0;
+      if (appliedDiscount) {
+        dCode = appliedDiscount.code;
+        dAmt  = appliedDiscount.amount;
+      } else {
+        // Handle return-URL path: page reloaded, read from pending order record
+        try {
+          const _pending = JSON.parse(localStorage.getItem('b3d_pending_order') || 'null');
+          if (_pending && _pending.discount_code) {
+            dCode = _pending.discount_code;
+            dAmt  = _pending.discount_amount || 0;
+          }
+        } catch {}
+      }
+      if (dCode) {
+        discountInfoHtml = `
+          <div style="
+            display:inline-flex;align-items:center;gap:.5rem;
+            margin:.6rem 0 0;
+            padding:.4rem .85rem;
+            background:rgba(5,150,105,.08);
+            border:1px solid rgba(5,150,105,.22);
+            border-radius:100px;
+            font-size:.78rem;color:#059669;font-weight:600
+          ">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            ${isAr() ? 'كود الخصم' : 'Discount code'}:
+            <span style="font-family:monospace;letter-spacing:.06em">${_esc(dCode)}</span>
+            &mdash;
+            ${isAr() ? 'وفّرت' : 'You saved'} ${Number(dAmt).toFixed(0)} ${t('sar')}
+          </div>`;
+      }
+    }
+
+    /* ── Action buttons ── */
+    const actionsHtml = success
+      ? `<a href="../pages/products.html" class="btn btn-outline">${t('backToShop')}</a>
+         <a href="../pages/orders.html"   class="btn btn-primary">${t('trackOrder')}</a>`
+      : `<a href="../pages/products.html" class="btn btn-outline">${t('backToShop')}</a>
+         ${oid ? `<button type="button" class="btn btn-primary" onclick="retryPayment()">${t('retryPay')}</button>` : ''}`;
 
     $('confirmBox').innerHTML = `
-      <div class="checkout-confirm__icon checkout-confirm__icon--${paid ? 'success' : 'failed'}">
+      <div class="checkout-confirm__icon checkout-confirm__icon--${success ? 'success' : 'failed'}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          ${paid
-            ? '<polyline points="20 6 9 17 4 12"/>'
-            : '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+          ${iconHtml}
         </svg>
       </div>
-      <h1>${paid ? t('successTitle') : t('failTitle')}</h1>
-      <p>${paid ? t('successDesc') : t('failDesc')}</p>
-      ${oid ? `<div class="checkout-confirm__order-id">${t('orderId')}: ${oid}</div>` : ''}
-      <div class="checkout-confirm__actions">
-        <a href="../pages/products.html" class="btn btn-outline">${t('backToShop')}</a>
-        ${!paid && oid ? `<button type="button" class="btn btn-primary" onclick="retryPayment()">${t('retryPay')}</button>` : ''}
-      </div>`;
+      <h1>${title}</h1>
+      <p>${desc}</p>
+      ${codNoteHtml}
+      ${orderIdHtml}
+      ${success ? addrDisplayHtml : ''}
+      ${discountInfoHtml}
+      <div class="checkout-confirm__actions">${actionsHtml}</div>`;
 
-    if (paid) {
-      // Clear the cart on success
+    if (success) {
+      // Clear the cart on any successful order (paid online or COD)
       localStorage.removeItem('b3d_cart');
       PaymentService.clearPendingOrder();
     }
@@ -611,10 +1078,98 @@
     } catch (_) {}
   }
 
+  /* ---- Show saved address cards for logged-in users ---- */
+  async function showSavedAddressCards() {
+    if (typeof AuthService === 'undefined') return;
+    try {
+      const user = await AuthService.getUser();
+      if (!user) return;
+      const addresses = JSON.parse(localStorage.getItem('b3d_addresses') || '[]');
+      if (!addresses.length) return;
+
+      const container = $('savedAddrCards');
+      if (!container) return;
+
+      // Sort: default address first
+      const sorted = [...addresses].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+
+      container.style.display = 'block';
+      container.innerHTML = `<div class="co-saved-addrs">
+        <div class="co-saved-addrs__title">${t('savedAddresses')}</div>
+        <div class="co-saved-addrs__list">
+          ${sorted.map(a => `
+            <div class="co-addr-opt${a.isDefault ? ' selected' : ''}" data-addr-id="${_esc(a.id)}">
+              <div class="co-addr-opt__body">
+                <div class="co-addr-opt__label">${_esc(a.label || a.city || '')}</div>
+                <div class="co-addr-opt__detail">${_esc([a.street, a.district, a.city].filter(Boolean).join('، '))}</div>
+              </div>
+              <button type="button" class="co-btn-use" data-addr-id="${_esc(a.id)}">${t('btnUseAddr')}</button>
+            </div>`).join('')}
+        </div>
+        <button type="button" class="co-btn-new-addr" id="btnNewAddress">${t('btnNewAddr')}</button>
+      </div>`;
+
+      // Pre-fill form with default address
+      const defaultAddr = sorted.find(a => a.isDefault) || sorted[0];
+      if (defaultAddr) _fillAddrIntoForm(defaultAddr, addresses);
+
+      // "Use this address" buttons
+      container.querySelectorAll('.co-btn-use').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const a = addresses.find(x => x.id === btn.dataset.addrId);
+          if (!a) return;
+          _fillAddrIntoForm(a, addresses);
+          container.querySelectorAll('.co-addr-opt').forEach(c => c.classList.remove('selected'));
+          btn.closest('.co-addr-opt').classList.add('selected');
+        });
+      });
+
+      // "Add new address" — hide cards and show blank form
+      $('btnNewAddress')?.addEventListener('click', () => {
+        container.style.display = 'none';
+        // Clear form so user enters a fresh address
+        ['district','address','buildingNumber','postalCode','notes'].forEach(id => {
+          const el = $(id); if (el) el.value = '';
+        });
+      });
+    } catch (_) {}
+  }
+
+  /* Helper: fill shipping form fields from a saved address object */
+  function _fillAddrIntoForm(a, addresses) {
+    const cityEl = $('city');
+    if (cityEl && a.city) {
+      const opt = Array.from(cityEl.options).find(o =>
+        o.value === a.city || o.textContent.trim() === a.city
+      );
+      if (opt) cityEl.value = opt.value;
+    }
+    if ($('district'))      $('district').value      = a.district || '';
+    if ($('address'))       $('address').value        = a.street   || '';
+    if ($('buildingNumber'))$('buildingNumber').value = a.buildingNumber || '';
+    if ($('postalCode'))    $('postalCode').value     = a.postalCode    || '';
+    if ($('notes'))         $('notes').value          = a.notes         || '';
+    // Prefill phone from saved address if contact phone is blank
+    const phoneEl = $('phone');
+    if (phoneEl && !phoneEl.value && a.phone) phoneEl.value = a.phone;
+  }
+
   /* ---- Init ---- */
   async function init() {
     applyLabels();
     loadCart();
+
+    /* ── Auth guard: checkout is for logged-in customers only ──
+       Guests are sent to login with ?next= pointing back here
+       and ?reason=purchase so login shows the purchase-context banner. */
+    if (typeof AuthService !== 'undefined') {
+      const session = await AuthService.getSession();
+      if (!session) {
+        const returnUrl = encodeURIComponent(window.location.href);
+        window.location.href = 'login.html?next=' + returnUrl + '&reason=purchase';
+        return;
+      }
+    }
 
     PaymentService.init();
 
@@ -629,11 +1184,258 @@
     renderSteps();
     showStep(1);
     prefillFromSession();
+    showSavedAddressCards();
 
     if (typeof Toast !== 'undefined') Toast.init();
   }
 
   init().catch(e => console.error('[Checkout]', e));
+})();
+</script>
+<!-- Leaflet JS — loaded after inline script so initMap() is available when called lazily -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+<script>
+/* ================================================================
+   Checkout Map Module  (Leaflet · Nominatim · no API key needed)
+   ================================================================ */
+(function () {
+  'use strict';
+
+  /* ── Local helpers ── */
+  const $    = id => document.getElementById(id);
+  const isAr = () => (localStorage.getItem('b3d_lang') || 'ar') === 'ar';
+  const _txt = (ar, en) => isAr() ? ar : en;
+
+  /* ── Map state (shared with checkout controller via window._checkoutMap) ── */
+  let _map          = null;
+  let _marker       = null;
+  let _geocodeTimer = null;
+
+  const DEFAULT_LAT = 24.7136;   // Riyadh
+  const DEFAULT_LNG = 46.6753;
+
+  window._checkoutMap = {
+    coords: { lat: DEFAULT_LAT, lng: DEFAULT_LNG },
+    moved:  false,
+    ready:  false,
+  };
+
+  /* ── Bail-out: show friendly message if Leaflet didn't load ── */
+  function _leafletMissing() {
+    const wrap = $('coMapWrap');
+    if (!wrap) return;
+    wrap.innerHTML = `
+      <div style="height:120px;display:flex;flex-direction:column;align-items:center;
+                  justify-content:center;gap:.5rem;color:var(--clr-text-muted);
+                  font-size:.82rem;background:var(--clr-surface-2)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>${_txt('تعذّر تحميل الخريطة — يمكنك إدخال العنوان يدويًا أدناه',
+                      'Map unavailable — please enter the address manually below')}</span>
+      </div>`;
+  }
+
+  /* ── Custom red SVG pin icon ── */
+  function _redIcon() {
+    return L.divIcon({
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="42" viewBox="0 0 30 42">
+               <path d="M15 0C6.716 0 0 6.716 0 15c0 10.5 15 27 15 27S30 25.5 30 15C30 6.716 23.284 0 15 0z"
+                     fill="#e11d48"/>
+               <circle cx="15" cy="15" r="7" fill="white" opacity=".92"/>
+               <circle cx="15" cy="15" r="3.5" fill="#e11d48"/>
+             </svg>`,
+      className:   '',
+      iconSize:    [30, 42],
+      iconAnchor:  [15, 42],
+      popupAnchor: [0, -44],
+    });
+  }
+
+  /* ── "Detecting…" chip overlay ── */
+  function _showFilling(show) {
+    let el = $('coMapFilling');
+    if (!el) {
+      el = document.createElement('div');
+      el.id        = 'coMapFilling';
+      el.className = 'co-map-geocoding';
+      $('coMapWrap')?.appendChild(el);
+    }
+    el.textContent  = _txt('جارٍ تحديد العنوان…', 'Detecting address…');
+    el.style.display = show ? 'block' : 'none';
+  }
+
+  /* ── Nominatim reverse-geocode (free, no key) ── */
+  async function _reverseGeocode(lat, lng) {
+    const lang = isAr() ? 'ar' : 'en';
+    try {
+      _showFilling(true);
+      const resp = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=${lang}`
+      );
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const addr = data.address || {};
+
+      const rawCity  = addr.city || addr.town || addr.county || addr.state_district || addr.state || '';
+      const district = addr.suburb || addr.neighbourhood || addr.quarter || addr.district || addr.residential || '';
+      const street   = addr.road || addr.street || addr.pedestrian || addr.footway || '';
+      const postal   = addr.postcode || '';
+
+      /* City dropdown — try exact, substring, then display-text match */
+      const cityEl = $('city');
+      if (cityEl && rawCity) {
+        const cn = rawCity.trim();
+        let opt = Array.from(cityEl.options).find(o => o.value === cn);
+        if (!opt) opt = Array.from(cityEl.options).find(o => cn.includes(o.value) || o.value.includes(cn));
+        if (!opt) opt = Array.from(cityEl.options).find(o => o.textContent.trim() === cn);
+        if (opt) cityEl.value = opt.value;
+      }
+
+      if ($('district') && district) $('district').value = district;
+      if ($('address')  && street)   $('address').value  = street;
+      if ($('postalCode') && postal) $('postalCode').value = postal;
+
+    } catch (err) {
+      console.warn('[Map] Reverse geocode:', err);
+    } finally {
+      _showFilling(false);
+    }
+  }
+
+  /* ── Position-change handler — debounced 600 ms ── */
+  function _onPosChange(lat, lng) {
+    window._checkoutMap.coords = { lat, lng };
+    window._checkoutMap.moved  = true;
+    clearTimeout(_geocodeTimer);
+    _geocodeTimer = setTimeout(() => _reverseGeocode(lat, lng), 600);
+  }
+
+  /* ── Lazy Leaflet init — called by showStep(2), 300 ms after section becomes visible ── */
+  window.initCheckoutMap = function () {
+    /* ── Guard: Leaflet not loaded ── */
+    if (typeof L === 'undefined') {
+      console.error('[Map] Leaflet not loaded — check network / CDN');
+      _leafletMissing();
+      return;
+    }
+
+    const mapEl = $('coMap');
+    if (!mapEl) return;
+
+    /* ── Already initialized — just fix dimensions ── */
+    if (_map) {
+      _map.invalidateSize({ animate: false });
+      setTimeout(() => _map.invalidateSize({ animate: false }), 200);
+      return;
+    }
+
+    /* ── Create map ── */
+    _map = L.map('coMap', {
+      zoomControl:     true,
+      attributionControl: true,
+    }).setView([DEFAULT_LAT, DEFAULT_LNG], 12);
+
+    /* OpenStreetMap tiles — no API key, no cost */
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
+      maxZoom: 19,
+      crossOrigin: true,
+    }).addTo(_map);
+
+    /* Draggable red marker */
+    _marker = L.marker([DEFAULT_LAT, DEFAULT_LNG], {
+      draggable: true,
+      icon: _redIcon(),
+    }).addTo(_map);
+
+    _marker.on('dragend', () => {
+      const p = _marker.getLatLng();
+      _onPosChange(p.lat, p.lng);
+    });
+
+    /* Click anywhere to move marker */
+    _map.on('click', e => {
+      _marker.setLatLng(e.latlng);
+      _onPosChange(e.latlng.lat, e.latlng.lng);
+    });
+
+    /* ── CRITICAL: force Leaflet to recalculate tile dimensions.
+       The container was hidden (display:none) during HTML parse;
+       even 300 ms after show, some browsers haven't painted yet.
+       Three progressive calls ensure tiles always appear. ── */
+    setTimeout(() => _map.invalidateSize({ animate: false }), 50);
+    setTimeout(() => _map.invalidateSize({ animate: false }), 250);
+    setTimeout(() => _map.invalidateSize({ animate: false }), 600);
+
+    window._checkoutMap.ready = true;
+    console.info('[Map] Leaflet initialized at', DEFAULT_LAT, DEFAULT_LNG);
+  };
+
+  /* ── "Use My Current Location" ── */
+  function _useCurrentLocation() {
+    const btn      = $('btnUseMyLocation');
+    const origHTML = btn ? btn.innerHTML : '';
+
+    if (!navigator.geolocation) {
+      alert(_txt('المتصفح لا يدعم تحديد الموقع. يرجى إدخال العنوان يدويًا.',
+                 'Your browser does not support geolocation. Please enter the address manually.'));
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2.5" stroke-linecap="round" class="co-spin">
+                         <path d="M21 12a9 9 0 1 1-9-9"/>
+                       </svg> ${_txt('جارٍ التحديد…', 'Locating…')}`;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords: { latitude: lat, longitude: lng } }) => {
+        window._checkoutMap.coords = { lat, lng };
+        window._checkoutMap.moved  = true;
+
+        /* Initialize map if not done yet (e.g. user clicked button before reaching step 2) */
+        if (!_map) {
+          window.initCheckoutMap();
+          await new Promise(r => setTimeout(r, 400));  // give Leaflet time to init
+        }
+
+        if (_map)    _map.setView([lat, lng], 16);
+        if (_marker) _marker.setLatLng([lat, lng]);
+
+        await _reverseGeocode(lat, lng);
+        if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+      },
+      (err) => {
+        if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+        const msg = err.code === 1     // PERMISSION_DENIED
+          ? _txt('يرجى السماح بالوصول إلى موقعك من إعدادات المتصفح',
+                 'Please allow location access in your browser settings')
+          : _txt('تعذّر تحديد موقعك — يرجى تحديد الموقع يدويًا على الخريطة',
+                 'Could not detect your location — please pin it manually on the map');
+        if (typeof Toast !== 'undefined') Toast.show(msg, 'error');
+        else alert(msg);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  /* ── Wire the button.
+     NOTE: This script is at the very end of <body>; all DOM elements above it
+     are already parsed. Do NOT use DOMContentLoaded — it may have already fired
+     before this script executes (browsers differ).  Direct binding is safer. ── */
+  const _btn = $('btnUseMyLocation');
+  if (_btn) {
+    _btn.addEventListener('click', _useCurrentLocation);
+  } else {
+    /* Fallback: wait one tick */
+    setTimeout(() => {
+      $('btnUseMyLocation')?.addEventListener('click', _useCurrentLocation);
+    }, 0);
+  }
+
 })();
 </script>
 </body>

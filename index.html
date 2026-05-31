@@ -23,6 +23,12 @@
     /* Hero canvas 3D scene */
     #heroCanvas { display: block; width: 100%; height: 100%; }
     .hero__canvas-wrap { min-height: 340px; }
+    @media (max-width: 767px) {
+      .hero__canvas-wrap { min-height: 240px; }
+    }
+    @media (max-width: 480px) {
+      .hero__canvas-wrap { min-height: 200px; }
+    }
 
     /* Page-specific tweaks */
     .page-wrapper { padding-top: 0; }

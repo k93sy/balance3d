@@ -183,23 +183,34 @@ async function renderHomeProducts() {
       trending:   `<span class="badge badge-accent">${l === 'ar' ? 'رائج' : 'Trending'}</span>`,
       bestseller: `<span class="badge badge-warm">${l === 'ar' ? 'الأكثر مبيعاً' : 'Best Seller'}</span>`,
     };
-    const badge  = p.badge ? (badgeMap[p.badge] || '') : '';
     const imgSrc = getProductPlaceholderSvg(p);
+    const sar    = App.t('product.sar');
+
+    /* Discount chip — shown when isOnSale; replaces the badge pill on the image */
+    const saleChip = (() => {
+      if (!p.isOnSale || !p.originalPrice) return '';
+      const ep  = p.salePrice ?? p.price ?? 0;
+      const pct = Math.round(((p.originalPrice - ep) / p.originalPrice) * 100);
+      return `<div class="product-card__discount-chip">${l==='ar'?`خصم ${pct}%`:`${pct}% off`}</div>`;
+    })();
+
+    /* Badge pill — only shown when there is NO discount chip to avoid overlap */
+    const effectiveBadge = !saleChip ? p.badge : null;
+    const badgeHtml = effectiveBadge ? (badgeMap[effectiveBadge] || '') : '';
 
     return `
       <div class="card product-card reveal reveal-delay-${i + 1}">
         <div class="product-card__image">
           <img src="${imgSrc}" alt="${(p.title?.[l] || '').replace(/"/g,'&quot;')}" loading="lazy"/>
-          ${badge ? `<div class="product-card__badge">${badge}</div>` : ''}
+          ${badgeHtml ? `<div class="product-card__badge">${badgeHtml}</div>` : ''}
+          ${saleChip}
         </div>
         <div class="product-card__body">
           <span class="product-card__category">${p.category?.[l] || ''}</span>
           <h3 class="product-card__title">${p.title?.[l] || ''}</h3>
           <p class="product-card__desc">${p.desc?.[l] || ''}</p>
           <div class="product-card__footer">
-            <div class="product-card__price">
-              ${p.price} <span data-i18n="product.sar">${App.t('product.sar')}</span>
-            </div>
+            ${renderProductPrice(p, sar)}
             <button class="btn btn-primary btn-sm" data-pid="${p.id}"
                     onclick="App.addToCart(typeof ProductStore!=='undefined' ? ProductStore.getById(this.dataset.pid) : PRODUCTS.find(x=>x.id===this.dataset.pid))">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">

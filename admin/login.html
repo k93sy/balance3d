@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/admin-tokens.css"/>
-  <link rel="stylesheet" href="css/admin-base.css"/>
+  <link rel="stylesheet" href="../css/tokens.css"/>
+  <link rel="stylesheet" href="css/admin.css"/>
   <!-- Auth scripts must load before the inline script below -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="../js/core/db.js"></script>
@@ -116,12 +116,6 @@
     .login-form-title { font-size:2rem; font-weight:900; margin-bottom:.35rem; letter-spacing:-.015em; }
     [dir="rtl"] .login-form-title { font-family:var(--font-arabic); letter-spacing:0; }
     .login-form-sub { font-size:.8rem; color:var(--clr-text-muted); margin-bottom:2.5rem; }
-    .login-hint {
-      display:flex; align-items:center; gap:.5rem; padding:.65rem .9rem;
-      background:rgba(0,194,255,0.07); border:1px solid rgba(0,194,255,0.18);
-      border-radius:8px; font-size:.75rem; color:var(--clr-text-secondary); margin-bottom:1.5rem;
-    }
-    .login-hint svg { color:var(--clr-accent); flex-shrink:0; width:15px; height:15px; }
     .form-group { display:flex; flex-direction:column; gap:.5rem; margin-bottom:1.25rem; }
     .form-label { font-size:.7rem; font-weight:700; color:var(--clr-text-primary); text-transform:uppercase; letter-spacing:.06em; }
     .form-label span { color:var(--clr-error); }
@@ -219,12 +213,6 @@
     </a>
     <h1 class="login-form-title" id="formTitle">تسجيل دخول المسؤولين</h1>
     <p class="login-form-sub" id="formSub">أدخل بياناتك للوصول إلى لوحة التحكم.</p>
-    <div class="login-hint">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
-      <span id="hintText">بيانات الاختبار: <strong>admin</strong> / <strong>admin123</strong></span>
-    </div>
     <div class="global-error" id="globalError"></div>
     <form id="loginForm" novalidate>
       <div class="form-group">
@@ -233,7 +221,7 @@
           <svg class="form-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
           </svg>
-          <input type="text" id="username" autocomplete="username" placeholder="admin"/>
+          <input type="text" id="username" autocomplete="username"/>
         </div>
         <div class="form-error" id="userError" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -276,8 +264,8 @@
   document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
 
   const tx = {
-    ar:{ label:'لوحة التحكم', title:'مرحباً بك في\nمركز الإدارة', desc:'قم بإدارة الطلبات، المنتجات، العملاء، والتقارير من مكان واحد.', stat1:'طلب / شهر', stat2:'رضا العملاء', stat3:'منتج نشط', warning:'هذه الصفحة مخصصة لمسؤولي النظام فقط. يتم تسجيل جميع محاولات الدخول.', back:'العودة للموقع', formTitle:'تسجيل دخول المسؤولين', formSub:'أدخل بياناتك للوصول إلى لوحة التحكم.', hint:'بيانات الاختبار: admin / admin123', lblUser:'اسم المستخدم', lblPw:'كلمة المرور', signin:'دخول لوحة التحكم', required:'مطلوب', invalid:'بيانات غير صحيحة. تأكد من اسم المستخدم وكلمة المرور.' },
-    en:{ label:'Admin Panel', title:'Welcome to the\nControl Center', desc:'Manage orders, products, customers, and reports from one place.', stat1:'Orders / month', stat2:'Customer satisfaction', stat3:'Active products', warning:'This page is for system administrators only. All access attempts are logged.', back:'Back to site', formTitle:'Admin Sign In', formSub:'Enter your credentials to access the dashboard.', hint:'Test credentials: admin / admin123', lblUser:'Username', lblPw:'Password', signin:'Sign In to Dashboard', required:'Required', invalid:'Invalid credentials. Try admin / admin123.' },
+    ar:{ label:'لوحة التحكم', title:'مرحباً بك في\nمركز الإدارة', desc:'قم بإدارة الطلبات، المنتجات، العملاء، والتقارير من مكان واحد.', stat1:'طلب / شهر', stat2:'رضا العملاء', stat3:'منتج نشط', warning:'هذه الصفحة مخصصة لمسؤولي النظام فقط. يتم تسجيل جميع محاولات الدخول.', back:'العودة للموقع', formTitle:'تسجيل دخول المسؤولين', formSub:'أدخل بياناتك للوصول إلى لوحة التحكم.', lblUser:'اسم المستخدم', lblPw:'كلمة المرور', signin:'دخول لوحة التحكم', required:'مطلوب', invalid:'بيانات غير صحيحة. تأكد من اسم المستخدم وكلمة المرور.' },
+    en:{ label:'Admin Panel', title:'Welcome to the\nControl Center', desc:'Manage orders, products, customers, and reports from one place.', stat1:'Orders / month', stat2:'Customer satisfaction', stat3:'Active products', warning:'This page is for system administrators only. All access attempts are logged.', back:'Back to site', formTitle:'Admin Sign In', formSub:'Enter your credentials to access the dashboard.', lblUser:'Username', lblPw:'Password', signin:'Sign In to Dashboard', required:'Required', invalid:'Invalid credentials. Please check your username and password.' },
   };
   const T = tx[lang] || tx.en;
   const $ = id => document.getElementById(id);
@@ -292,9 +280,6 @@
   $('backLabel').textContent= T.back;
   $('formTitle').textContent= T.formTitle;
   $('formSub').textContent  = T.formSub;
-  $('hintText').innerHTML   = lang==='ar'
-    ? 'بيانات الاختبار: <strong>admin</strong> / <strong>admin123</strong>'
-    : 'Test credentials: <strong>admin</strong> / <strong>admin123</strong>';
   $('lblUser').innerHTML    = T.lblUser + ' <span style="color:var(--clr-error)">*</span>';
   $('lblPw').innerHTML      = T.lblPw   + ' <span style="color:var(--clr-error)">*</span>';
   $('signinLabel').textContent = T.signin;
@@ -330,7 +315,7 @@
       // AuthService handles both Supabase DB check and offline demo fallback
       const authResult = await AuthService.signInAdmin(user, pass);
       if (authResult.ok) {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'index.html';
         return;
       }
       btn.classList.remove('loading'); btn.disabled = false;
